@@ -1,0 +1,171 @@
+@import "tailwindcss";
+
+@theme {
+  --color-mv-black: #000000;
+  --color-mv-dark: #1A1A1A;
+  --color-mv-gold: #D4AF37;
+  --color-mv-white: #F5F5F5;
+
+  --font-sans: "ABC Monument Grotesk", "Inter", sans-serif;
+
+  --animate-loader: loader 2s ease-in-out forwards;
+
+  @keyframes loader {
+    0% {
+      opacity: 1;
+    }
+
+    90% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+}
+
+/* Custom Base Styles */
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-mv-black);
+  color: var(--color-mv-white);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+[role="button"] {
+  cursor: pointer;
+}
+
+::selection {
+  background-color: var(--color-mv-gold);
+  color: var(--color-mv-black);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-mv-black);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-mv-gold);
+}
+
+/* Swiper Overrides */
+.swiper-wrapper {
+  display: flex !important;
+  flex-direction: row !important;
+}
+
+.swiper-slide {
+  height: auto;
+  flex-shrink: 0;
+  display: block;
+}
+
+/* Font Face Definitions (Static Weights) */
+
+/* THIN (100) */
+@font-face {
+  font-family: 'ABC Monument Grotesk';
+  src: url('./assets/fonts/ABCMonumentGrotesk-Thin-Trial.otf') format('opentype');
+  font-weight: 100;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'ABC Monument Grotesk';
+  src: url('./assets/fonts/ABCMonumentGrotesk-ThinItalic-Trial.otf') format('opentype');
+  font-weight: 100;
+  font-style: italic;
+}
+
+/* LIGHT (300) */
+@font-face {
+  font-family: 'ABC Monument Grotesk';
+  src: url('./assets/fonts/ABCMonumentGrotesk-Light-Trial.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'ABC Monument Grotesk';
+  src: url('./assets/fonts/ABCMonumentGrotesk-LightItalic-Trial.otf') format('opentype');
+  font-weight: 300;
+  font-style: italic;
+}
+
+/* REGULAR (400) */
+@font-face {
+  font-family: 'ABC Monument Grotesk';
+  src: url('./assets/fonts/ABCMonumentGrotesk-Regular-Trial.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'ABC Monument Grotesk';
+  src: url('./assets/fonts/ABCMonumentGrotesk-RegularItalic-Trial.otf') format('opentype');
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* MEDIUM (500) */
+@font-face {
+  font-family: 'ABC Monument Grotesk';
+  src: url('./assets/fonts/ABCMonumentGrotesk-Medium-Trial.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'ABC Monument Grotesk';
+  src: url('./assets/fonts/ABCMonumentGrotesk-MediumItalic-Trial.otf') format('opentype');
+  font-weight: 500;
+  font-style: italic;
+}
+
+/* BOLD (700) */
+@font-face {
+  font-family: 'ABC Monument Grotesk';
+  src: url('./assets/fonts/ABCMonumentGrotesk-Bold-Trial.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'ABC Monument Grotesk';
+  src: url('./assets/fonts/ABCMonumentGrotesk-BoldItalic-Trial.otf') format('opentype');
+  font-weight: 700;
+  font-style: italic;
+}
+
+/* BLACK (900) */
+@font-face {
+  font-family: 'ABC Monument Grotesk';
+  src: url('./assets/fonts/ABCMonumentGrotesk-Black-Trial.otf') format('opentype');
+  font-weight: 900;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'ABC Monument Grotesk';
+  src: url('./assets/fonts/ABCMonumentGrotesk-BlackItalic-Trial.otf') format('opentype');
+  font-weight: 900;
+  font-style: italic;
+}
