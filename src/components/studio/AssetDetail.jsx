@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight, Layers, MessageSquare, Check, Trash2, SplitSquareHorizontal } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { X, ChevronLeft, ChevronRight, Layers, MessageSquare, Check, Trash2, SplitSquareHorizontal, CheckCircle } from 'lucide-react';
 import { LuxuryTitle } from '../common/LuxuryTitle';
+import { WatermarkOverlay } from '../common/WatermarkOverlay';
+import { assetService } from '../../services/assetService';
 
 // --- Annotation Marker Component ---
 const AnnotationMarker = ({ x, y, isNew, onClick, isSelected }) => (
@@ -14,7 +17,7 @@ const AnnotationMarker = ({ x, y, isNew, onClick, isSelected }) => (
         <div className={`absolute inset-1 rounded-full border border-mv-gold/80 ${isSelected ? 'bg-mv-gold/20' : 'bg-black/20'} backdrop-blur-sm`}></div>
 
         {/* Center Dot */}
-        <div className="w-1.5 h-1.5 bg-mv-gold rounded-full shadow-[0_0_10px_rgba(212,175,55,0.8)]"></div>
+        <div className="w-1.5 h-1.5 bg-mv-gold rounded-full shadow-sm"></div>
 
         {/* Connecting Line (Decorative) */}
         {!isNew && (
@@ -67,8 +70,8 @@ const ComparisonSlider = ({ beforeImage, afterImage }) => {
                 className="absolute top-0 bottom-0 w-px bg-mv-gold cursor-col-resize z-10 flex items-center justify-center"
                 style={{ left: `${sliderPosition}%` }}
             >
-                <div className="w-8 h-8 bg-mv-gold/20 backdrop-blur border border-mv-gold rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(212,175,55,0.3)]">
-                    <SplitSquareHorizontal size={14} className="text-mv-gold" />
+                <div className="w-8 h-8 bg-black/50 backdrop-blur border border-white/30 rounded-full flex items-center justify-center shadow-lg">
+                    <SplitSquareHorizontal size={14} className="text-white" />
                 </div>
             </div>
 
@@ -85,7 +88,18 @@ const ComparisonSlider = ({ beforeImage, afterImage }) => {
 
 
 export const AssetDetail = ({ asset, onClose, authorName = "Moi" }) => {
-    const [annotations, setAnnotations] = useState(asset.annotations || []);
+
+    const formatAnnotation = (note) => ({
+        id: note.id,
+        x: note.x_position ?? note.x,
+        y: note.y_position ?? note.y,
+        text: note.content ?? note.text,
+        author: typeof note.author === 'object' ? (note.author?.name || authorName) : (note.author ?? authorName),
+        timestamp: note.timestamp,
+        replies: note.replies || []
+    });
+
+    const [annotations, setAnnotations] = useState((asset.annotations || []).map(formatAnnotation));
     const [isComparing, setIsComparing] = useState(false);
     const [selectedAnnotationId, setSelectedAnnotationId] = useState(null);
     const [tempAnnotation, setTempAnnotation] = useState(null);
@@ -113,20 +127,22 @@ export const AssetDetail = ({ asset, onClose, authorName = "Moi" }) => {
         setCommentText("");
     };
 
-    const handleSaveAnnotation = () => {
+    const handleSaveAnnotation = async () => {
         if (!commentText.trim()) return;
-        const newNote = {
-            id: `note_${Date.now()}`,
-            x: tempAnnotation.x,
-            y: tempAnnotation.y,
-            text: commentText,
-            author: authorName,
-            timestamp: new Date().toISOString(),
-            replies: []
-        };
-        setAnnotations([...annotations, newNote]);
-        setTempAnnotation(null);
-        setCommentText("");
+        try {
+            const newApiNote = await assetService.addAnnotation(asset.id, {
+                content: commentText,
+                x_position: tempAnnotation.x,
+                y_position: tempAnnotation.y,
+                timestamp: new Date().toISOString()
+            });
+            const newNote = formatAnnotation(newApiNote);
+            setAnnotations([...annotations, newNote]);
+            setTempAnnotation(null);
+            setCommentText("");
+        } catch (e) {
+            console.error("Erreur annotation:", e);
+        }
     };
 
     const handleSendReply = (noteId) => {
@@ -154,8 +170,16 @@ export const AssetDetail = ({ asset, onClose, authorName = "Moi" }) => {
         setReplyText("");
     };
 
-    return (
-        <div className="fixed inset-0 z-50 bg-mv-black/95 backdrop-blur-md flex flex-col animate-fade-in">
+    // Prevent body scroll when open
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, []);
+
+    return createPortal(
+        <div className="fixed inset-0 z-[100] bg-mv-black/95 backdrop-blur-md flex flex-col animate-fade-in">
             {/* Toolbar */}
             <div className="h-16 border-b border-white/10 flex items-center justify-between px-6 bg-mv-black/50">
                 <div className="flex items-center gap-4">
@@ -213,17 +237,31 @@ export const AssetDetail = ({ asset, onClose, authorName = "Moi" }) => {
                         ) : (
                             <div className="relative w-full h-full flex items-center justify-center">
                                 {/* Base Image */}
-                                <img
-                                    src={currentVersion.url}
-                                    alt="Asset"
-                                    className="max-w-full max-h-full object-contain cursor-crosshair shadow-2xl"
-                                    onClick={handleImageClick}
-                                />
+                                <div
+                                    className="relative w-full h-full flex items-center justify-center"
+                                    onContextMenu={(e) => e.preventDefault()}
+                                >
+                                    <div className="absolute inset-0 z-20" /> {/* Transparent Shield Layer */}
+                                    <WatermarkOverlay />
+                                    <img
+                                        src={currentVersion.url}
+                                        alt="Asset"
+                                        className="max-w-full max-h-full object-contain shadow-2xl pointer-events-none select-none"
+                                        style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+                                        draggable="false"
+                                    />
+
+                                    {/* Click Handler on wrapper (via the transparent shield essentially) */}
+                                    <div
+                                        className="absolute inset-0 z-30 cursor-crosshair"
+                                        onClick={handleImageClick}
+                                    ></div>
+                                </div>
 
                                 {/* Annotation Hint Overlay (Visible on Hover) */}
-                                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none opacity-0 group-hover/canvas:opacity-100 transition-opacity duration-300">
+                                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none opacity-0 group-hover/canvas:opacity-100 transition-opacity duration-300 z-40">
                                     <div className="bg-mv-gold/90 text-black px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full bg-black border border-white/50 animate-ping"></div>
+                                        <div className="w-2 h-2 rounded-full bg-black border border-white/10 hover:border-white/30 transition-all duration-3000 animate-ping"></div>
                                         Cliquez n'importe où pour annoter
                                     </div>
                                 </div>
@@ -250,7 +288,8 @@ export const AssetDetail = ({ asset, onClose, authorName = "Moi" }) => {
                                                 <div
                                                     className="absolute z-40 w-72 flex flex-col rounded-lg bg-mv-dark/95 backdrop-blur border border-mv-gold/30 shadow-2xl animate-fade-in-up"
                                                     style={{
-                                                        left: `calc(${note.x}% + 24px)`,
+                                                        // Smart positioning: if marker is on right half, show panel on left
+                                                        left: note.x > 50 ? `calc(${note.x}% - 300px)` : `calc(${note.x}% + 40px)`,
                                                         top: `calc(${note.y}% - 12px)`,
                                                         maxHeight: '300px'
                                                     }}
@@ -265,7 +304,7 @@ export const AssetDetail = ({ asset, onClose, authorName = "Moi" }) => {
                                                     {/* Thread Content */}
                                                     <div className="p-3 overflow-y-auto custom-scrollbar flex-1">
                                                         {/* Main Message */}
-                                                        <p className="text-sm text-white leading-relaxed font-light mb-3">{note.text}</p>
+                                                        <p className="text-sm text-white leading-relaxed font-bold tracking-tight text-white mb-3">{note.text}</p>
 
                                                         {/* Replies */}
                                                         {note.replies && note.replies.length > 0 && (
@@ -327,14 +366,15 @@ export const AssetDetail = ({ asset, onClose, authorName = "Moi" }) => {
                         <div
                             className="absolute z-30 bg-mv-dark border border-white/10 rounded-lg p-3 shadow-2xl w-64 animate-fade-in-up"
                             style={{
-                                left: `calc(${tempAnnotation.x}% + 20px)`,
+                                // Smart positioning: if marker is on right half, show panel on left
+                                left: tempAnnotation.x > 50 ? `calc(${tempAnnotation.x}% - 280px)` : `calc(${tempAnnotation.x}% + 40px)`,
                                 top: `calc(${tempAnnotation.y}% - 20px)`
                             }}
                         >
                             <div className="text-xs text-mv-gold uppercase tracking-widest mb-2 font-bold">Nouveau Commentaire</div>
                             <textarea
                                 autoFocus
-                                className="w-full bg-black/20 text-white text-sm p-2 rounded border border-white/5 focus:border-mv-gold/50 outline-none resize-none mb-2"
+                                className="w-full bg-black/20 text-white text-sm p-2 rounded border border-white/10 hover:border-white/30 transition-all duration-300 focus:border-white/50 outline-none resize-none mb-2"
                                 rows={3}
                                 placeholder="Écrivez votre commentaire..."
                                 value={commentText}
@@ -367,7 +407,7 @@ export const AssetDetail = ({ asset, onClose, authorName = "Moi" }) => {
                             annotations.map(note => (
                                 <div
                                     key={note.id}
-                                    className={`p-3 rounded border transition-all cursor-pointer ${selectedAnnotationId === note.id ? 'bg-white/5 border-mv-gold/50' : 'bg-transparent border-white/5 hover:border-white/20'}`}
+                                    className={`p-3 rounded border transition-all cursor-pointer ${selectedAnnotationId === note.id ? 'bg-white/5 border-white/50' : 'bg-transparent border-white/10 hover:border-white/30 transition-all duration-300'}`}
                                     onClick={() => setSelectedAnnotationId(note.id)}
                                 >
                                     <div className="flex justify-between items-start mb-1">
@@ -381,6 +421,38 @@ export const AssetDetail = ({ asset, onClose, authorName = "Moi" }) => {
                     </div>
                 </div>
             </div>
-        </div>
+
+            {/* Validation Bar (Only for Client) */}
+            {authorName === "Client" && (
+                <div className="h-20 border-t border-white/10 bg-mv-black/80 backdrop-blur flex items-center justify-between px-8 shrink-0 z-50">
+                    <div className="flex items-center gap-4">
+                        <div className="text-xs text-gray-500 uppercase tracking-widest">Décision</div>
+                        <div className="h-8 w-px bg-white/10"></div>
+
+                        {asset.status === 'approved' ? (
+                            <div className="flex items-center gap-2 text-green-400">
+                                <CheckCircle size={20} />
+                                <span className="font-bold">Approuvé pour livraison</span>
+                            </div>
+                        ) : (
+                            <div className="flex gap-3">
+                                <button className="px-6 py-2 rounded-full border border-red-500/50 text-red-500 hover:bg-red-500/10 transition-colors uppercase text-xs font-bold tracking-wider">
+                                    Rejeter
+                                </button>
+                                <button className="px-6 py-2 rounded-full bg-mv-gold text-black hover:bg-white transition-colors uppercase text-xs font-bold tracking-wider flex items-center gap-2">
+                                    <Check size={16} />
+                                    Approuver
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="text-xs text-gray-600">
+                        En approuvant, vous validez la facturation de cet asset.
+                    </div>
+                </div>
+            )}
+        </div>,
+        document.body
     );
 };

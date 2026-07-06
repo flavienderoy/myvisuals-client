@@ -5,10 +5,10 @@ export const ControlConsole = ({ onGenerateLink }) => {
     const [watermark, setWatermark] = useState(true);
 
     return (
-        <div className="bg-mv-dark border border-white/5 rounded-lg p-6">
+        <div className="bg-mv-dark border border-white/10 hover:border-white/30 transition-all duration-300 rounded-lg p-6">
             <div className="flex items-center gap-2 mb-6">
                 <Settings size={18} className="text-mv-gold" />
-                <h3 className="text-lg font-light text-white">Console de Contrôle</h3>
+                <h3 className="text-lg font-bold tracking-tight text-white">Console de Contrôle</h3>
             </div>
 
             <div className="space-y-6">

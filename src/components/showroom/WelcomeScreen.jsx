@@ -10,7 +10,7 @@ export const WelcomeScreen = ({ onEnter }) => {
             </div>
 
             <LuxuryTitle text="Maison Éclat." size="text-4xl md:text-6xl" className="mb-4 text-white" />
-            <p className="text-gray-400 max-w-md mx-auto mb-10 text-lg font-light">
+            <p className="text-gray-400 max-w-md mx-auto mb-10 text-lg font-bold tracking-tight text-white">
                 Secure Showroom Access. <br />
                 Spring Collection 2026 Preview.
             </p>

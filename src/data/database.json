@@ -12,7 +12,7 @@
             "name": "Collection Printemps 2026",
             "date": "2026-03-12",
             "status": "in_progress",
-            "thumbnail": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop",
+            "thumbnail": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1000&auto=format&fit=crop",
             "description": "Shooting éditorial haut de gamme pour le catalogue Printemps. Focus sur la lumière naturelle et les textures brutes.",
             "looks": [
                 {
@@ -38,13 +38,13 @@
                         {
                             "version": 1,
                             "type": "raw",
-                            "url": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop",
+                            "url": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1000&auto=format&fit=crop",
                             "date": "2026-03-12T10:00:00Z"
                         },
                         {
                             "version": 2,
                             "type": "retouched",
-                            "url": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop&sat=-20",
+                            "url": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1000&auto=format&fit=crop",
                             "date": "2026-03-13T14:00:00Z"
                         }
                     ],
@@ -67,7 +67,7 @@
                         {
                             "version": 1,
                             "type": "final",
-                            "url": "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=1000&auto=format&fit=crop",
+                            "url": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1000&auto=format&fit=crop",
                             "date": "2026-03-12T10:05:00Z"
                         }
                     ],
@@ -82,7 +82,7 @@
                         {
                             "version": 1,
                             "type": "raw",
-                            "url": "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=1000&auto=format&fit=crop",
+                            "url": "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1000&auto=format&fit=crop",
                             "date": "2026-03-12T11:00:00Z"
                         }
                     ],
@@ -97,7 +97,7 @@
                         {
                             "version": 1,
                             "type": "final",
-                            "url": "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?q=80&w=1000&auto=format&fit=crop",
+                            "url": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1000&auto=format&fit=crop",
                             "date": "2026-03-12T11:05:00Z"
                         }
                     ],
@@ -112,7 +112,7 @@
                         {
                             "version": 1,
                             "type": "raw",
-                            "url": "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=1000&auto=format&fit=crop",
+                            "url": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1000&auto=format&fit=crop",
                             "date": "2026-03-12T13:00:00Z"
                         }
                     ],
@@ -126,7 +126,7 @@
             "name": "Campagne Hiver 2025",
             "date": "2025-11-05",
             "status": "completed",
-            "thumbnail": "https://images.unsplash.com/photo-1485230946086-1d99d529a132?q=80&w=2070&auto=format&fit=crop",
+            "thumbnail": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1000&auto=format&fit=crop",
             "description": "Campagne d'hiver mettant en vedette les manteaux.",
             "assets": []
         },
@@ -136,7 +136,7 @@
             "name": "Lookbook Accessoires",
             "date": "2026-01-20",
             "status": "in_progress",
-            "thumbnail": "https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93?q=80&w=2070&auto=format&fit=crop",
+            "thumbnail": "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1000&auto=format&fit=crop",
             "assets": []
         },
         {
@@ -145,7 +145,7 @@
             "name": "Reels Réseaux Sociaux",
             "date": "2026-02-15",
             "status": "pending",
-            "thumbnail": "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=2070&auto=format&fit=crop",
+            "thumbnail": "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=1000&auto=format&fit=crop",
             "assets": []
         },
         {
@@ -154,7 +154,7 @@
             "name": "Événement Ouverture Boutique",
             "date": "2025-09-10",
             "status": "completed",
-            "thumbnail": "https://images.unsplash.com/photo-1519741347686-c1e0aaf276k9?q=80&w=2070&auto=format&fit=crop",
+            "thumbnail": "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=1000&auto=format&fit=crop",
             "assets": []
         },
         {
@@ -163,7 +163,7 @@
             "name": "Villa K",
             "date": "2026-04-02",
             "status": "pending",
-            "thumbnail": "https://images.unsplash.com/photo-1600596542815-60002041dd81?q=80&w=2070&auto=format&fit=crop",
+            "thumbnail": "https://images.unsplash.com/photo-1600596542815-60002041dd81?w=1000&auto=format&fit=crop",
             "description": "Reportage exclusif sur la nouvelle villa moderniste à Kyoto.",
             "looks": [
                 {
@@ -185,7 +185,7 @@
                         {
                             "version": 1,
                             "type": "raw",
-                            "url": "https://images.unsplash.com/photo-1600596542815-60002041dd81?q=80&w=1000&auto=format&fit=crop",
+                            "url": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1000&auto=format&fit=crop",
                             "date": "2026-04-02T09:00:00Z"
                         }
                     ]
@@ -198,7 +198,7 @@
             "name": "Loft Industriel",
             "date": "2026-01-10",
             "status": "completed",
-            "thumbnail": "https://images.unsplash.com/photo-1534349762913-924996965d74?q=80&w=2070&auto=format&fit=crop",
+            "thumbnail": "https://images.unsplash.com/photo-1600607687920-4e2a09be15ea?w=1000&auto=format&fit=crop",
             "assets": []
         },
         {
@@ -207,7 +207,7 @@
             "name": "Appartement Parisien",
             "date": "2025-12-05",
             "status": "completed",
-            "thumbnail": "https://images.unsplash.com/photo-1502005229762-cf1c2da7c5d6?q=80&w=2070&auto=format&fit=crop",
+            "thumbnail": "https://images.unsplash.com/photo-1600566753086-00f18efc2291?w=1000&auto=format&fit=crop",
             "assets": []
         },
         {
@@ -216,7 +216,7 @@
             "name": "Shooting Couverture Sept.",
             "date": "2026-05-01",
             "status": "pending",
-            "thumbnail": "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop",
+            "thumbnail": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1000&auto=format&fit=crop",
             "description": "Shooting pour la couverture du numéro de Septembre.",
             "assets": []
         }

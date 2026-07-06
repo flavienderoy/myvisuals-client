@@ -19,9 +19,9 @@ export const AssetManager = () => {
     };
 
     return (
-        <div className="bg-mv-dark border border-white/5 rounded-lg p-6 mb-6">
+        <div className="bg-mv-dark border border-white/10 hover:border-white/30 transition-all duration-300 rounded-lg p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-light text-white">Asset Manager</h3>
+                <h3 className="text-lg font-bold tracking-tight text-white">Asset Manager</h3>
                 <div className="flex items-center gap-2 text-xs text-green-500 bg-green-900/10 border border-green-900/30 px-2 py-1 rounded">
                     <ShieldCheck size={14} />
                     <span>Encryption AES-256 Active</span>
