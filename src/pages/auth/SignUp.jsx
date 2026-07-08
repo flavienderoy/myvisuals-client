@@ -9,6 +9,8 @@ const SignUp = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [role, setRole] = useState('client');
+    const [siret, setSiret] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const { signUp } = useAuth();
     const toast = useToast();
@@ -16,11 +18,14 @@ const SignUp = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (role === 'studio' && !siret) {
+            return toast.error("Le numéro SIRET est requis pour un compte Studio.");
+        }
         setIsLoading(true);
         try {
-            await signUp({ email, password, options: { data: { name } } });
+            await signUp({ email, password, options: { data: { name, role, siret: role === 'studio' ? siret : null } } });
             toast.success("Inscription réussie !");
-            navigate('/studio');
+            navigate(role === 'studio' ? '/studio' : '/client/projects');
         } catch (error) {
             toast.error(error.message || "Erreur lors de l'inscription");
         } finally {
@@ -34,6 +39,24 @@ const SignUp = () => {
             subtitle="Rejoignez l'élite des créateurs."
         >
             <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Role Selector */}
+                <div className="flex gap-4 mb-6">
+                    <button
+                        type="button"
+                        onClick={() => setRole('client')}
+                        className={`flex-1 py-3 rounded-lg border text-sm font-bold tracking-wider uppercase transition-all ${role === 'client' ? 'bg-mv-gold text-black border-mv-gold' : 'bg-black/20 text-gray-400 border-white/10 hover:border-white/30'}`}
+                    >
+                        Je suis Client
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setRole('studio')}
+                        className={`flex-1 py-3 rounded-lg border text-sm font-bold tracking-wider uppercase transition-all ${role === 'studio' ? 'bg-mv-gold text-black border-mv-gold' : 'bg-black/20 text-gray-400 border-white/10 hover:border-white/30'}`}
+                    >
+                        Je suis Studio
+                    </button>
+                </div>
+
                 <div className="space-y-2">
                     <label className="text-xs text-gray-400 uppercase tracking-widest pl-1">Nom Complet</label>
                     <div className="relative group">
@@ -44,10 +67,26 @@ const SignUp = () => {
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="Jean Dupont"
-                            className="w-full bg-black/20 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-700 focus:outline-none focus:border-mv-gold/50 transition-all font-bold tracking-tight text-white"
+                            className="w-full bg-black/20 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-700 focus:outline-none focus:border-mv-gold/50 transition-all font-bold tracking-tight"
                         />
                     </div>
                 </div>
+
+                {role === 'studio' && (
+                    <div className="space-y-2">
+                        <label className="text-xs text-gray-400 uppercase tracking-widest pl-1">Numéro SIRET</label>
+                        <div className="relative group">
+                            <input
+                                type="text"
+                                required={role === 'studio'}
+                                value={siret}
+                                onChange={(e) => setSiret(e.target.value)}
+                                placeholder="123 456 789 00012"
+                                className="w-full bg-black/20 border border-white/10 rounded-lg py-3 px-4 text-white placeholder-gray-700 focus:outline-none focus:border-mv-gold/50 transition-all font-bold tracking-tight"
+                            />
+                        </div>
+                    </div>
+                )}
 
                 <div className="space-y-2">
                     <label className="text-xs text-gray-400 uppercase tracking-widest pl-1">Email</label>
@@ -59,7 +98,7 @@ const SignUp = () => {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="name@example.com"
-                            className="w-full bg-black/20 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-700 focus:outline-none focus:border-mv-gold/50 transition-all font-bold tracking-tight text-white"
+                            className="w-full bg-black/20 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-700 focus:outline-none focus:border-mv-gold/50 transition-all font-bold tracking-tight"
                         />
                     </div>
                 </div>
@@ -74,7 +113,7 @@ const SignUp = () => {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="••••••••"
-                            className="w-full bg-black/20 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-700 focus:outline-none focus:border-mv-gold/50 transition-all font-bold tracking-tight text-white"
+                            className="w-full bg-black/20 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-700 focus:outline-none focus:border-mv-gold/50 transition-all font-bold tracking-tight"
                         />
                     </div>
                 </div>

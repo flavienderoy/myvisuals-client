@@ -17,9 +17,15 @@ const SignIn = () => {
         e.preventDefault();
         setIsLoading(true);
         try {
-            await signIn({ email, password });
+            const data = await signIn({ email, password });
+            const userRole = data?.user?.user_metadata?.role || 'client';
+            
             toast.success("Connexion réussie");
-            navigate('/studio');
+            if (userRole === 'studio') {
+                navigate('/studio');
+            } else {
+                navigate('/client/projects');
+            }
         } catch (error) {
             toast.error(error.message || "Erreur lors de la connexion");
         } finally {
