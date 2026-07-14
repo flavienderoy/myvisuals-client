@@ -187,7 +187,7 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
                             <p className="text-gray-400 max-w-md mx-auto mb-8 leading-relaxed">
                                 {project.status === 'completed'
                                     ? "Tous les fichiers sont validés et déverrouillés. Vous pouvez télécharger les assets finaux ci-dessous."
-                                    : "Les fichiers haute définition sont verrouillés en attente de validation finale et du règlement du solde."
+                                    : "Les fichiers haute définition seront déverrouillés une fois la validation finale approuvée par le client."
                                 }
                             </p>
 
@@ -213,21 +213,15 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
                                     </button>
                                 </div>
                             ) : (
-                                <div className="inline-block relative">
-                                    <button
-                                        className="relative z-10 bg-white text-black px-8 py-3 rounded-lg font-bold uppercase tracking-widest hover:bg-gray-200 transition-colors flex items-center gap-3 relative overflow-hidden group/unlock"
-                                        onClick={() => alert("Simulation : Paiement validé ! Le statut du projet passerait à 'completed'.")}
-                                    >
-                                        <span className="absolute inset-0 bg-white/20 translate-y-full group-hover/unlock:translate-y-0 transition-transform duration-300"></span>
-                                        <Clock size={16} />
-                                        Débloquer le Téléchargement
-                                    </button>
+                                <div className="inline-flex items-center gap-3 bg-white/5 border border-white/10 text-gray-300 px-8 py-3 rounded-lg font-bold uppercase tracking-widest">
+                                    <Clock size={16} className="text-mv-gold" />
+                                    En attente de validation client
                                 </div>
                             )}
 
                             <div className="mt-8 pt-8 border-t border-white/10 hover:border-white/30 transition-all duration-300 flex justify-center gap-8 text-xs text-gray-500 font-mono uppercase tracking-widest">
                                 <span className="flex items-center gap-2"><CheckCircle size={12} className="text-green-500" /> Validation Requise</span>
-                                <span className="flex items-center gap-2">SOLDE : {project.price ? `${project.price} €` : 'N/A'}</span>
+                                <span className="flex items-center gap-2">Livraison via portail client</span>
                             </div>
                         </div>
                     </div>
