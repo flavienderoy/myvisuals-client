@@ -207,12 +207,12 @@ export const DataProvider = ({ children }) => {
 
     // --- Actions ---
 
-    const addClient = async (clientName, description, avatar = null) => {
+    const addClient = async (clientName, description, avatar = null, email = null) => {
         try {
-            const newApiObj = await clientService.createClient({ name: clientName, description, avatar_url: avatar });
-            const newClient = { id: newApiObj.id, name: newApiObj.name, description: newApiObj.description, logo: newApiObj.avatar_url };
+            const newApiObj = await clientService.createClient({ name: clientName, description, avatar_url: avatar, email });
+            const newClient = { id: newApiObj.id, name: newApiObj.name, description: newApiObj.description, logo: newApiObj.avatar_url, email: newApiObj.email, invite_status: newApiObj.invite_status };
             setClients(prev => [...prev, newClient]);
-            toast.success(`Entreprise "${clientName}" créée avec succès`);
+            toast.success(email ? `Invitation envoyée à ${email}` : `Entreprise "${clientName}" créée`);
             return newClient;
         } catch(e) {
             toast.error("Impossible de créer l'entreprise");
@@ -337,7 +337,8 @@ export const DataProvider = ({ children }) => {
         updateProject,
         addAsset,
         resetData,
-        
+        refreshData: loadCoreData,
+
         currentSelection,
         selectGlobal,
         selectClient,

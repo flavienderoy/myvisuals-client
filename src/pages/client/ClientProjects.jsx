@@ -6,9 +6,9 @@ import { ProjectCard } from '../../components/studio/ProjectSlider';
 
 const ClientProjects = () => {
     const navigate = useNavigate();
-    const { projects, currentUser, selectProject } = useData();
-    const clientName = currentUser.role === 'client' ? currentUser.name : 'Maison Éclat';
-    const clientProjects = projects.filter(p => p.client === clientName);
+    const { projects, selectProject } = useData();
+    // The API already returns only the projects linked to this client account.
+    const clientProjects = projects;
 
     return (
         <div className="max-w-7xl mx-auto px-10 py-12 space-y-12 animate-fade-in">

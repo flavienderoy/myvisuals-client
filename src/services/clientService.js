@@ -20,5 +20,14 @@ export const clientService = {
   deleteClient: async (id) => {
     const { data } = await api.delete(`/clients/${id}`);
     return data;
+  },
+  // Client portal — invitations addressed to the logged-in user
+  getInvitations: async () => {
+    const { data } = await api.get('/clients/invitations');
+    return data;
+  },
+  acceptInvitation: async (id) => {
+    const { data } = await api.post(`/clients/${id}/accept`);
+    return data;
   }
 };

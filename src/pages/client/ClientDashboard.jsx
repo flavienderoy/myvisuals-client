@@ -10,11 +10,8 @@ const ClientDashboard = () => {
     const navigate = useNavigate();
     const { projects, currentUser, selectProject } = useData();
 
-    // Fallback if no specific client logic is implemented, default to 'Maison Éclat' for demo
-    const clientName = currentUser.role === 'client' ? currentUser.name : 'Maison Éclat';
-
-    // Filter projects for this client
-    const clientProjects = projects.filter(p => p.client === clientName);
+    // The API already returns only the projects linked to this client account.
+    const clientProjects = projects;
 
     const stats = {
         activeProjects: clientProjects.filter(p => p.status === 'in_progress').length,
@@ -28,7 +25,7 @@ const ClientDashboard = () => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
                 <div>
                     <LuxuryTitle text="Espace Client" size="text-4xl" className="text-white mb-3" />
-                    <p className="text-gray-400 text-lg">Bienvenue, <span className="text-white">{clientName}</span>.</p>
+                    <p className="text-gray-400 text-lg">Bienvenue, <span className="text-white">{currentUser?.name || 'cher client'}</span>.</p>
                 </div>
                 <div className="text-right">
                     <p className="text-xs text-gray-500 uppercase tracking-widest font-medium mb-1">Dernière Connexion</p>

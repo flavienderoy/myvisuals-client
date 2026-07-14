@@ -16,13 +16,11 @@ import { AuthProvider } from './context/AuthContext';
 import LandingPage from './pages/LandingPage';
 
 // Client Portal Pages
-import ClientLogin from './pages/client/ClientLogin';
 import ClientDashboard from './pages/client/ClientDashboard';
 import ClientProjects from './pages/client/ClientProjects';
 import ClientDownloads from './pages/client/ClientDownloads';
 import ClientMessages from './pages/client/ClientMessages';
 import ClientProjectDetail from './pages/client/ClientProjectDetail';
-import ClientSignUp from './pages/client/ClientSignUp';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 // Wrapper for MainLayout to pass current path logic if needed
@@ -50,11 +48,9 @@ function App() {
             <Route path="/login" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
 
-            {/* Client Portal Routes */}
-            <Route path="/client/login" element={<ClientLogin />} />
-            <Route path="/client/signup" element={<ClientSignUp />} />
+            {/* Client Portal Routes (auth is unified — see /login and /signup) */}
             <Route path="/client" element={
-              <ProtectedRoute redirectTo="/client/login">
+              <ProtectedRoute redirectTo="/login">
                 <ClientLayout />
               </ProtectedRoute>
             }>

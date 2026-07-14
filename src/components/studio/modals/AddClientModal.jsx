@@ -6,6 +6,7 @@ import { Upload, X } from 'lucide-react';
 export const AddClientModal = ({ isOpen, onClose }) => {
     const { addClient } = useData();
     const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
     const [description, setDescription] = useState('');
     const [avatar, setAvatar] = useState(null); // Base64 string for storage
     const fileInputRef = useRef(null);
@@ -32,10 +33,11 @@ export const AddClientModal = ({ isOpen, onClose }) => {
         e.preventDefault();
         if (!name.trim()) return;
 
-        addClient(name, description, avatar);
+        addClient(name, description, avatar, email.trim() || null);
 
         // Reset form
         setName('');
+        setEmail('');
         setDescription('');
         setAvatar(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
@@ -93,6 +95,18 @@ export const AddClientModal = ({ isOpen, onClose }) => {
                         placeholder="Ex: Maison Éclat"
                         autoFocus
                     />
+                </div>
+
+                <div>
+                    <label className="block text-sm text-gray-400 mb-2">Email d'invitation (Optionnel)</label>
+                    <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-mv-gold/50 transition-colors"
+                        placeholder="client@exemple.com"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Le client recevra une invitation à rejoindre ses projets sur son espace.</p>
                 </div>
 
                 <div>

@@ -116,16 +116,16 @@ const LandingPage = () => {
                         {/* Right: Auth Section */}
                         <div className="flex items-center space-x-4">
                             <button
-                                onClick={() => navigate('/client/login')}
+                                onClick={() => navigate('/login')}
                                 className="px-4 py-2 text-sm font-medium text-white landing-glass rounded-lg hover:bg-white/10 transition-all"
                             >
-                                Espace Client
+                                Se connecter
                             </button>
                             <button
-                                onClick={() => navigate('/studio')}
+                                onClick={() => navigate('/signup')}
                                 className="px-4 py-2 text-sm font-medium bg-white text-black rounded-lg hover:bg-white/90 transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)]"
                             >
-                                Espace Studio
+                                S'inscrire
                             </button>
                         </div>
                     </div>

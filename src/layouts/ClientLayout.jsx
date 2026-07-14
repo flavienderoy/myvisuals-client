@@ -4,6 +4,7 @@ import { Home, FolderOpen, MessageSquare, Download, ChevronLeft, ChevronRight, M
 import { useData } from '../context/DataContext';
 import { NotificationCenter } from '../components/common/NotificationCenter';
 import { UserProfileMenu } from '../components/common/UserProfileMenu';
+import { InvitationBanner } from '../components/client/InvitationBanner';
 
 export const ClientLayout = () => {
     const [collapsed, setCollapsed] = useState(false);
@@ -145,6 +146,9 @@ export const ClientLayout = () => {
             {/* Main Content Area mapping exactly MainLayout's main tag */}
             <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden relative scrollbar-hide">
                 <div className="relative z-10 w-full min-h-screen">
+                    <div className="max-w-7xl mx-auto px-10 pt-10">
+                        <InvitationBanner />
+                    </div>
                     <Outlet />
                 </div>
             </main>
