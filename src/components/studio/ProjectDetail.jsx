@@ -9,7 +9,6 @@ import { ImageUploader } from '../common/ImageUploader';
 import { Moodboard } from './Moodboard';
 import { ColorPalette } from './ColorPalette';
 import { AuditTrail } from './AuditTrail';
-import { SmartInvoice } from './SmartInvoice';
 
 export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false }) => {
     // Tabs: 'strategy' (was overview), 'production', 'governance' (was delivery)
@@ -167,16 +166,9 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
 
                 {activeTab === 'governance' && (
                     <div className="animate-fade-in max-w-6xl mx-auto">
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                        <div className="mb-8">
                             {/* Audit Trail */}
-                            <div className="lg:col-span-2">
-                                <AuditTrail />
-                            </div>
-
-                            {/* Invoice */}
-                            <div>
-                                <SmartInvoice />
-                            </div>
+                            <AuditTrail />
                         </div>
 
                         {/* Delivery Console (Existing) */}

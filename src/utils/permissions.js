@@ -97,16 +97,6 @@ export const formatDuration = (minutes) => {
 };
 
 /**
- * Calculate project revenue
- */
-export const calculateProjectRevenue = (project, quotes = []) => {
-    const acceptedQuotes = quotes.filter(q =>
-        q.projectId === project.id && q.status === 'accepted'
-    );
-    return acceptedQuotes.reduce((sum, q) => sum + q.total, 0);
-};
-
-/**
  * Get activity icon and color
  */
 export const getActivityStyle = (type) => {

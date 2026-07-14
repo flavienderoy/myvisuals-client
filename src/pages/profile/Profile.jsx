@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Mail, Bell, Shield, CreditCard, Check, LogOut } from 'lucide-react';
+import { User, Mail, Bell, Shield, Check, LogOut } from 'lucide-react';
 import { LuxuryTitle } from '../../components/common/LuxuryTitle';
 import database from '../../data/database.json';
 import { PageTransition } from '../../components/common/PageTransition';
@@ -73,13 +73,6 @@ const Profile = () => {
                             <p className="text-xs text-gray-500">Gérez vos notifications et l'esthétique de votre interface.</p>
                         </div>
 
-                        {/* Billing */}
-                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-2xl opacity-60 pointer-events-none grayscale shadow-lg">
-                            <h4 className="flex items-center gap-2 text-white font-medium mb-4">
-                                <CreditCard size={18} className="text-mv-gold" /> Facturation (Bientôt)
-                            </h4>
-                            <p className="text-xs text-gray-500">Gérez vos moyens de paiement et factures.</p>
-                        </div>
                     </div>
                 </div>
             </div>

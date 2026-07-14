@@ -448,7 +448,7 @@ export const AssetDetail = ({ asset, onClose, authorName = "Moi" }) => {
                     </div>
 
                     <div className="text-xs text-gray-600">
-                        En approuvant, vous validez la facturation de cet asset.
+                        En approuvant, vous validez la version finale de cet asset.
                     </div>
                 </div>
             )}

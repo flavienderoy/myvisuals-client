@@ -5,7 +5,6 @@ import { projectService } from '../services/projectService';
 import { clientService } from '../services/clientService';
 import { taskService } from '../services/taskService';
 import { moodBoardService } from '../services/moodBoardService';
-import { quoteService } from '../services/quoteService';
 import { activityService } from '../services/activityService';
 import { assetService } from '../services/assetService';
 import { notificationService } from '../services/notificationService';
@@ -23,7 +22,6 @@ import {
     createMoodBoardFunctions,
     createTaskFunctions,
     createSmartFolderFunctions,
-    createQuoteFunctions,
     createTimeTrackingFunctions,
     createAuditLogFunctions,
     createLookFunctions,
@@ -50,7 +48,6 @@ export const DataProvider = ({ children }) => {
     const [activities, setActivities] = useState([]);
     const [moodBoards, setMoodBoards] = useState([]);
     const [tasks, setTasks] = useState([]);
-    const [quotes, setQuotes] = useState([]);
     const [timeEntries, setTimeEntries] = useState([]);
     const [notifications, setNotifications] = useState([]);
     const [messages, setMessages] = useState([]);
@@ -117,7 +114,6 @@ export const DataProvider = ({ children }) => {
                 fetchedClients,
                 fetchedTasks,
                 fetchedMoodBoards,
-                fetchedQuotes,
                 fetchedTimeEntries,
                 fetchedNotifications,
                 fetchedSmartFolders,
@@ -128,7 +124,6 @@ export const DataProvider = ({ children }) => {
                 clientService.getClients(),
                 taskService.getTasks().catch(() => []),
                 moodBoardService.getMoodBoards().catch(() => []),
-                quoteService.getQuotes().catch(() => []),
                 timeEntryService.getTimeEntries().catch(() => []),
                 notificationService.getNotifications().catch(() => []),
                 smartFolderService.getSmartFolders().catch(() => []),
@@ -138,7 +133,6 @@ export const DataProvider = ({ children }) => {
 
             setTasks(fetchedTasks || []);
             setMoodBoards(fetchedMoodBoards || []);
-            setQuotes(fetchedQuotes || []);
             setTimeEntries(fetchedTimeEntries || []);
             setNotifications(fetchedNotifications || []);
             setSmartFolders(fetchedSmartFolders || []);
@@ -324,7 +318,6 @@ export const DataProvider = ({ children }) => {
     const moodBoardFunctions = createMoodBoardFunctions(moodBoards, setMoodBoards, toast);
     const taskFunctions = createTaskFunctions(tasks, setTasks, toast, activityFunctions.addActivity);
     const smartFolderFunctions = createSmartFolderFunctions(smartFolders, setSmartFolders, toast);
-    const quoteFunctions = createQuoteFunctions(quotes, setQuotes, toast);
     const timeTrackingFunctions = createTimeTrackingFunctions(timeEntries, setTimeEntries, toast);
     const auditLogFunctions = createAuditLogFunctions(auditLogs, setAuditLogs);
     const lookFunctions = createLookFunctions(looks, setLooks, toast);
@@ -354,7 +347,6 @@ export const DataProvider = ({ children }) => {
         moodBoards, ...moodBoardFunctions,
         tasks, ...taskFunctions,
         smartFolders, ...smartFolderFunctions,
-        quotes, ...quoteFunctions,
         timeEntries, ...timeTrackingFunctions,
         permissions, setPermissions,
         auditLogs, ...auditLogFunctions,

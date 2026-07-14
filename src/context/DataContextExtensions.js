@@ -5,7 +5,6 @@ import { STORAGE_KEYS, ACTIVITY_TYPES } from '../constants';
 import { activityService } from '../services/activityService';
 import { moodBoardService } from '../services/moodBoardService';
 import { taskService } from '../services/taskService';
-import { quoteService } from '../services/quoteService';
 import { timeEntryService } from '../services/timeEntryService';
 import { smartFolderService } from '../services/smartFolderService';
 import { auditLogService } from '../services/auditLogService';
@@ -164,37 +163,6 @@ export const createSmartFolderFunctions = (smartFolders, setSmartFolders, toast)
             setSmartFolders(prev => prev.filter(f => f.id !== folderId));
             toast.success('Dossier supprimé');
         } catch(e) { toast.error("Erreur de suppression du dossier"); }
-    },
-});
-
-/**
- * Quote Management Functions
- */
-export const createQuoteFunctions = (quotes, setQuotes, toast) => ({
-    createQuote: async (quoteData) => {
-        try {
-            const newQuote = await quoteService.createQuote(quoteData);
-            setQuotes(prev => [...prev, newQuote]);
-            toast.success('Devis créé');
-            return newQuote;
-        } catch (e) {
-            toast.error("Erreur lors de la création du devis");
-        }
-    },
-
-    updateQuoteStatus: async (quoteId, status) => {
-        try {
-            await quoteService.updateQuote(quoteId, { status });
-            setQuotes(prev => prev.map(q =>
-                q.id === quoteId ? { ...q, status, updated_at: new Date().toISOString() } : q
-            ));
-        } catch (e) {
-            toast.error("Erreur lors de la mise à jour du devis");
-        }
-    },
-
-    getQuotesByClient: (clientId) => {
-        return quotes.filter(q => q.clientId === clientId || q.client_id === clientId);
     },
 });
 

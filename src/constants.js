@@ -77,7 +77,6 @@ export const STORAGE_KEYS = {
     MOOD_BOARDS: 'visuals_moodBoards',
     TASKS: 'visuals_tasks',
     SMART_FOLDERS: 'visuals_smartFolders',
-    QUOTES: 'visuals_quotes',
     TIME_ENTRIES: 'visuals_timeEntries',
     PERMISSIONS: 'visuals_permissions',
     AUDIT_LOGS: 'visuals_auditLogs',
@@ -118,15 +117,6 @@ export const APPROVAL_STATUS = {
     APPROVED: 'approved',
     REJECTED: 'rejected',
     CHANGES_REQUESTED: 'changes_requested',
-};
-
-// Quote Status
-export const QUOTE_STATUS = {
-    DRAFT: 'draft',
-    SENT: 'sent',
-    ACCEPTED: 'accepted',
-    REJECTED: 'rejected',
-    EXPIRED: 'expired',
 };
 
 // Permission Levels

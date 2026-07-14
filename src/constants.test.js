@@ -3,7 +3,6 @@ import {
     STATUS,
     ASSET_TYPES,
     USER_ROLES,
-    QUOTE_STATUS,
     TASK_STATUS,
     TASK_PRIORITY,
     APPROVAL_STATUS,
@@ -44,16 +43,6 @@ describe('Constants', () => {
             expect(USER_ROLES.MEMBER).toBe('member');
             expect(USER_ROLES.CLIENT).toBe('client');
             expect(USER_ROLES.VIEWER).toBe('viewer');
-        });
-    });
-
-    describe('QUOTE_STATUS', () => {
-        it('should define all quote statuses', () => {
-            expect(QUOTE_STATUS.DRAFT).toBe('draft');
-            expect(QUOTE_STATUS.SENT).toBe('sent');
-            expect(QUOTE_STATUS.ACCEPTED).toBe('accepted');
-            expect(QUOTE_STATUS.REJECTED).toBe('rejected');
-            expect(QUOTE_STATUS.EXPIRED).toBe('expired');
         });
     });
 
