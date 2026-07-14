@@ -1,7 +1,7 @@
 # ================================
 # Visuals.co — Frontend CI/CD
 # ================================
-# Lint → Test → Build → Deploy Vercel
+# Lint → Test → Build → E2E → Deploy Vercel
 
 name: Frontend CI/CD
 
@@ -91,12 +91,56 @@ jobs:
           ls -la dist/
 
   # ─────────────────────────────────
-  # Job 4: Deploy to Vercel
+  # Job 4: E2E (Playwright, cross-browser)
+  # ─────────────────────────────────
+  e2e:
+    name: 🎭 E2E
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install app dependencies
+        run: npm ci
+
+      - name: Install E2E dependencies
+        working-directory: ./e2e
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: ./e2e
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright tests (Chrome, Firefox, Safari)
+        working-directory: ./e2e
+        run: npm test
+        env:
+          CI: true
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          retention-days: 7
+
+  # ─────────────────────────────────
+  # Job 5: Deploy to Vercel
   # ─────────────────────────────────
   deploy:
     name: 🚀 Deploy to Vercel
     runs-on: ubuntu-latest
-    needs: build
+    needs: e2e
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
