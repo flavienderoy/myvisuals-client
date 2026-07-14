@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { useData } from '../../context/DataContext';
 import { Modal } from '../common/Modal';
 import { FileText, Plus, Trash2, Download, Send } from 'lucide-react';
@@ -78,9 +80,43 @@ export const QuoteBuilder = ({ projectId, clientId, onClose }) => {
     };
 
     const handleExportPDF = () => {
-        // Simulate PDF generation
-        console.log('Generating PDF for quote:', quoteData);
-        alert('Fonctionnalité PDF disponible avec backend complet');
+        const doc = new jsPDF();
+
+        // Header
+        doc.setFontSize(22);
+        doc.text('DEVIS', 14, 20);
+        doc.setFontSize(12);
+        doc.text('Visuals.co', 14, 30);
+        doc.text('Date : ' + new Date().toLocaleDateString('fr-FR'), 14, 38);
+        if (quoteData.title) doc.text('Objet : ' + quoteData.title, 14, 46);
+
+        // Line items table
+        autoTable(doc, {
+            head: [['Description', 'Montant']],
+            body: quoteData.items.map((item) => [
+                item.description || '—',
+                `${item.amount} €`,
+            ]),
+            startY: 56,
+            theme: 'grid',
+            headStyles: { fillColor: [20, 20, 20] },
+        });
+
+        // Totals
+        const finalY = doc.lastAutoTable?.finalY || 56;
+        doc.setFontSize(12);
+        doc.text(`Sous-total : ${total} €`, 140, finalY + 10);
+        doc.text(`TVA (20%) : ${tva} €`, 140, finalY + 20);
+        doc.setFontSize(14);
+        doc.text(`Total TTC : ${totalTTC} €`, 140, finalY + 30);
+
+        if (quoteData.notes) {
+            doc.setFontSize(10);
+            doc.text('Notes : ' + quoteData.notes, 14, finalY + 45);
+        }
+
+        const slug = (quoteData.title || 'devis').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+        doc.save(`devis_${slug}.pdf`);
     };
 
     return (

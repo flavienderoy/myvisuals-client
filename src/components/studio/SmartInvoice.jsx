@@ -1,7 +1,7 @@
 import React from 'react';
 import { Download, FileText } from 'lucide-react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 export const SmartInvoice = () => {
     const items = [
@@ -38,7 +38,7 @@ export const SmartInvoice = () => {
             tableRows.push(rowData);
         });
 
-        doc.autoTable({
+        autoTable(doc, {
             head: [tableColumn],
             body: tableRows,
             startY: 60,
