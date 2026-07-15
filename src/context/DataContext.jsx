@@ -173,7 +173,9 @@ export const DataProvider = ({ children }) => {
                 id: c.id,
                 name: c.name,
                 description: c.description || '',
-                logo: c.logo_url || c.avatar_url
+                logo: c.logo_url || c.avatar_url,
+                email: c.email || null,
+                inviteStatus: c.invite_status || null,
             }));
 
             const mappedProjects = fetchedProjects.map(p => ({
@@ -210,7 +212,7 @@ export const DataProvider = ({ children }) => {
     const addClient = async (clientName, description, avatar = null, email = null) => {
         try {
             const newApiObj = await clientService.createClient({ name: clientName, description, avatar_url: avatar, email });
-            const newClient = { id: newApiObj.id, name: newApiObj.name, description: newApiObj.description, logo: newApiObj.avatar_url, email: newApiObj.email, invite_status: newApiObj.invite_status };
+            const newClient = { id: newApiObj.id, name: newApiObj.name, description: newApiObj.description, logo: newApiObj.avatar_url, email: newApiObj.email, inviteStatus: newApiObj.invite_status };
             setClients(prev => [...prev, newClient]);
             toast.success(email ? `Invitation envoyée à ${email}` : `Entreprise "${clientName}" créée`);
             return newClient;
@@ -221,9 +223,9 @@ export const DataProvider = ({ children }) => {
 
     const addProject = async (projectData) => {
         try {
-            // Find or create the client
-            let clientId = null;
-            if (projectData.client) {
+            // Prefer an explicit client id (robust); fall back to name resolution
+            let clientId = projectData.clientId || null;
+            if (!clientId && projectData.client) {
                 const existing = clients.find(c => c.name === projectData.client);
                 if (existing) {
                     clientId = existing.id;
@@ -245,7 +247,8 @@ export const DataProvider = ({ children }) => {
                 id: newApiObj.id,
                 name: newApiObj.name,
                 description: newApiObj.description,
-                client: newApiObj.client?.name || projectData.client,
+                client: newApiObj.client?.name || projectData.client || clients.find(c => c.id === clientId)?.name || 'Sans client',
+                client_id: newApiObj.client_id || clientId,
                 status: newApiObj.status,
                 date: newApiObj.date,
                 looks: [],

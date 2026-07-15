@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useData } from '../../context/DataContext';
 import { LuxuryTitle } from '../common/LuxuryTitle';
 import { Plus, LayoutGrid, Clock, CheckCircle } from 'lucide-react';
-import { ProjectCard, ProjectSlider } from './ProjectSlider';
+import { ProjectSlider } from './ProjectSlider';
+import { AddProjectModal } from './modals/AddProjectModal';
 
 export const ClientOverview = ({ clientName }) => {
     const { projects, selectProject, clients } = useData();
+    const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
 
     // Find client object
     const client = clients.find(c => c.name === clientName);
@@ -35,7 +37,10 @@ export const ClientOverview = ({ clientName }) => {
                         <LuxuryTitle text={clientName} size="text-5xl" className="text-white" />
                     </div>
                 </div>
-                <button className="flex items-center gap-2 px-6 py-3 bg-mv-gold text-black rounded-full font-bold uppercase tracking-widest hover:bg-white transition-colors">
+                <button
+                    onClick={() => setIsProjectModalOpen(true)}
+                    className="flex items-center gap-2 px-6 py-3 bg-mv-gold text-black rounded-full font-bold uppercase tracking-widest hover:bg-white transition-colors"
+                >
                     <Plus size={16} />
                     <span>Nouveau Projet</span>
                 </button>
@@ -85,6 +90,12 @@ export const ClientOverview = ({ clientName }) => {
                     </div>
                 )}
             </div>
+
+            <AddProjectModal
+                isOpen={isProjectModalOpen}
+                onClose={() => setIsProjectModalOpen(false)}
+                initialClientId={client?.id}
+            />
         </div>
     );
 };
