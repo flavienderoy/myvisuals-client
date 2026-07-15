@@ -9,6 +9,18 @@ export const assetService = {
     const { data } = await api.get(`/assets/${id}`);
     return data;
   },
+  // Returns a short-lived signed URL to the ORIGINAL HD file (authorized only)
+  getDownloadUrl: async (id) => {
+    const { data } = await api.get(`/assets/${id}/download`);
+    return data.url;
+  },
+  // Fetch a ZIP of a project's original files (authorized) as a Blob.
+  // Optional ids array limits the archive to a selection.
+  downloadProjectZip: async (projectId, ids) => {
+    const params = ids && ids.length ? `?ids=${ids.join(',')}` : '';
+    const res = await api.get(`/assets/project/${projectId}/zip${params}`, { responseType: 'blob' });
+    return res.data;
+  },
   createAsset: async (projectId, file, metadata) => {
     const formData = new FormData();
     formData.append('file', file);

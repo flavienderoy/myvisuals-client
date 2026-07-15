@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { Download, CheckSquare, X } from 'lucide-react';
 import { useToast } from '../../hooks/useToast';
+import { assetService } from '../../services/assetService';
+import { saveBlob } from '../../utils/download';
 
 export const BulkSelector = ({ assets, onClose }) => {
     const [selectedAssets, setSelectedAssets] = useState(new Set());
+    const [isDownloading, setIsDownloading] = useState(false);
     const toast = useToast();
 
     const toggleAsset = (assetId) => {
@@ -24,29 +27,32 @@ export const BulkSelector = ({ assets, onClose }) => {
         setSelectedAssets(new Set());
     };
 
-    const handleDownload = () => {
+    const handleDownload = async () => {
         if (selectedAssets.size === 0) {
             toast.error('Sélectionnez au moins un asset');
             return;
         }
 
-        // Simulate ZIP download (would be real with backend)
-        toast.promise(
-            new Promise((resolve) => {
-                setTimeout(() => {
-                    resolve();
-                }, 1500);
-            }),
-            {
-                loading: `Préparation du ZIP (${selectedAssets.size} fichiers)...`,
-                success: `${selectedAssets.size} fichiers téléchargés !`,
-                error: 'Erreur lors du téléchargement',
-            }
-        );
+        const ids = [...selectedAssets];
+        const projectId = assets.find((a) => ids.includes(a.id))?.project_id;
+        if (!projectId) {
+            toast.error('Projet introuvable pour ces assets');
+            return;
+        }
 
-        // In real app: create ZIP and trigger download
-        // const blob = await createZip(selectedAssets);
-        // downloadBlob(blob, 'assets.zip');
+        setIsDownloading(true);
+        try {
+            await toast.promise(
+                assetService.downloadProjectZip(projectId, ids).then((blob) => saveBlob(blob, 'visuals-assets.zip')),
+                {
+                    loading: `Préparation du ZIP (${ids.length} fichiers)...`,
+                    success: `Archive téléchargée (${ids.length} fichiers)`,
+                    error: 'Erreur lors du téléchargement',
+                }
+            );
+        } finally {
+            setIsDownloading(false);
+        }
     };
 
     return (
@@ -85,11 +91,11 @@ export const BulkSelector = ({ assets, onClose }) => {
                     <div className="flex-1" />
                     <button
                         onClick={handleDownload}
-                        disabled={selectedAssets.size === 0}
+                        disabled={selectedAssets.size === 0 || isDownloading}
                         className="px-6 py-2 bg-mv-gold hover:bg-white text-black font-medium rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <Download size={16} />
-                        Télécharger ({selectedAssets.size})
+                        {isDownloading ? 'Préparation…' : `Télécharger (${selectedAssets.size})`}
                     </button>
                 </div>
 

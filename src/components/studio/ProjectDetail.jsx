@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Grid, Layout, Package, CheckCircle, Plus, Palette, Lightbulb, ShieldCheck, Clock, Monitor, Settings } from 'lucide-react';
+import { ArrowLeft, Grid, Package, CheckCircle, Plus, Palette, Lightbulb, ShieldCheck, Clock, Monitor, Settings, Download, Loader2 } from 'lucide-react';
 import { LuxuryTitle } from '../common/LuxuryTitle';
 import { ProductionView } from './StudioViews';
 import { PageTransition } from '../common/PageTransition';
@@ -9,15 +9,36 @@ import { ImageUploader } from '../common/ImageUploader';
 import { Moodboard } from './Moodboard';
 import { ColorPalette } from './ColorPalette';
 import { AuditTrail } from './AuditTrail';
+import { assetService } from '../../services/assetService';
+import { saveBlob } from '../../utils/download';
+import { useToast } from '../../hooks/useToast';
 
 export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false }) => {
     // Tabs: 'strategy' (was overview), 'production', 'governance' (was delivery)
     const [activeTab, setActiveTab] = useState('strategy');
     const [isUploadOpen, setIsUploadOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
+    const toast = useToast();
 
     const handleUpload = (fileData) => {
         onAddAsset(fileData);
+    };
+
+    const handleDownloadAll = async () => {
+        setIsDownloading(true);
+        try {
+            await toast.promise(
+                assetService.downloadProjectZip(project.id).then((blob) => saveBlob(blob, `${project.name || 'projet'}.zip`)),
+                {
+                    loading: 'Préparation de l\'archive…',
+                    success: 'Archive téléchargée',
+                    error: 'Aucun fichier disponible ou accès refusé',
+                }
+            );
+        } finally {
+            setIsDownloading(false);
+        }
     };
 
     return (
@@ -184,25 +205,18 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
                             </p>
 
                             {project.status === 'completed' ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-lg mx-auto animate-fade-in-up">
-                                    <button className="flex items-center justify-center gap-3 p-4 bg-white/5 border border-white/10 rounded-lg hover:border-mv-gold hover:bg-white/10 transition-all group/btn">
-                                        <div className="p-2 bg-black rounded-full text-white group-hover/btn:text-mv-gold transition-colors">
-                                            <Layout size={20} />
-                                        </div>
-                                        <div className="text-left">
-                                            <div className="text-sm text-white font-medium">Pack Web (JPG)</div>
-                                            <div className="text-xs text-gray-500">Optimisé • 45 MB</div>
-                                        </div>
+                                <div className="max-w-lg mx-auto animate-fade-in-up">
+                                    <button
+                                        onClick={handleDownloadAll}
+                                        disabled={isDownloading}
+                                        className="w-full flex items-center justify-center gap-3 p-4 bg-mv-gold text-black rounded-lg hover:bg-white transition-all font-bold uppercase tracking-widest disabled:opacity-60 disabled:cursor-not-allowed"
+                                    >
+                                        {isDownloading ? <Loader2 size={20} className="animate-spin" /> : <Download size={20} />}
+                                        {isDownloading ? 'Préparation…' : 'Télécharger tous les fichiers (ZIP)'}
                                     </button>
-                                    <button className="flex items-center justify-center gap-3 p-4 bg-white/5 border border-white/10 rounded-lg hover:border-mv-gold hover:bg-white/10 transition-all group/btn">
-                                        <div className="p-2 bg-black rounded-full text-white group-hover/btn:text-mv-gold transition-colors">
-                                            <Package size={20} />
-                                        </div>
-                                        <div className="text-left">
-                                            <div className="text-sm text-white font-medium">Pack Print (TIFF)</div>
-                                            <div className="text-xs text-gray-500">Master • 1.2 GB</div>
-                                        </div>
-                                    </button>
+                                    <p className="text-xs text-gray-500 mt-3">
+                                        {isClient ? 'Vos fichiers validés en haute définition.' : 'Archive de tous les fichiers du projet.'}
+                                    </p>
                                 </div>
                             ) : (
                                 <div className="inline-flex items-center gap-3 bg-white/5 border border-white/10 text-gray-300 px-8 py-3 rounded-lg font-bold uppercase tracking-widest">
