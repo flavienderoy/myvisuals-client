@@ -108,6 +108,6 @@ describe('UserProfileMenu Component', () => {
         fireEvent.click(screen.getByRole('button'));
         fireEvent.click(screen.getByText('Déconnexion'));
         
-        expect(mockNavigate).toHaveBeenCalledWith('/signin');
+        expect(mockNavigate).toHaveBeenCalledWith('/login');
     });
 });

@@ -15,7 +15,7 @@ export const UserProfileMenu = () => {
 
     const handleLogout = () => {
         // In real app: clear auth tokens, etc.
-        navigate('/signin');
+        navigate('/login');
     };
 
     return (
