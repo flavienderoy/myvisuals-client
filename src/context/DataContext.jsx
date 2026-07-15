@@ -161,6 +161,20 @@ export const DataProvider = ({ children }) => {
                 setMessages([]);
             }
 
+            // Fetch assets for every project (so studio & client see them on load)
+            let assetsByProject = {};
+            try {
+                const results = await Promise.all(
+                    (fetchedProjects || []).map(async (p) => {
+                        const res = await assetService.getAssets(p.id).catch(() => []);
+                        return [p.id, Array.isArray(res) ? res : res.data || []];
+                    })
+                );
+                assetsByProject = Object.fromEntries(results);
+            } catch (err) {
+                console.warn("Could not fetch assets", err);
+            }
+
             setCurrentUser({
                 id: user.id,
                 name: user.user_metadata?.name || 'User',
@@ -189,7 +203,7 @@ export const DataProvider = ({ children }) => {
                 owner_id: p.owner_id,
                 // UI mappings arrays:
                 looks: p.looks || [],
-                assets: p.assets || [],
+                assets: assetsByProject[p.id] || p.assets || [],
             }));
 
             setClients(mappedClients);
