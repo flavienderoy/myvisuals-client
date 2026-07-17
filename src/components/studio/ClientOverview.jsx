@@ -15,10 +15,10 @@ export const ClientOverview = ({ clientName }) => {
     // Filter projects for this client
     const clientProjects = projects.filter(p => p.client === clientName);
 
-    // Calculate stats
+    // Calculate stats (real data only)
     const activeProjects = clientProjects.filter(p => p.status === 'in_progress').length;
     const completedProjects = clientProjects.filter(p => p.status === 'completed').length;
-    const totalRevenue = "12 500 €"; // Mocked for now
+    const pendingAssets = clientProjects.reduce((acc, p) => acc + (p.assets?.filter(a => a.status === 'pending').length || 0), 0);
 
     return (
         <div className="space-y-8 animate-fade-in p-8 pb-20">
@@ -63,9 +63,9 @@ export const ClientOverview = ({ clientName }) => {
                     </div>
                 </div>
                 <div className="bg-white/5 border border-white/10 hover:border-white/20 transition-all duration-300 p-8 rounded-xl">
-                    <div className="text-gray-500 text-xs uppercase tracking-widest mb-2">Volume d'Affaires</div>
-                    <div className="text-3xl text-mv-gold font-bold tracking-tight text-white">
-                        {totalRevenue}
+                    <div className="text-gray-500 text-xs uppercase tracking-widest mb-2">En attente de validation</div>
+                    <div className="text-3xl text-mv-gold font-bold tracking-tight tabular-nums">
+                        {pendingAssets}
                     </div>
                 </div>
             </div>

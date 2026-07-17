@@ -1,25 +1,28 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Grid, Package, CheckCircle, Plus, Palette, Lightbulb, ShieldCheck, Clock, Monitor, Settings, Download, Loader2 } from 'lucide-react';
+import { ArrowLeft, Grid, Package, CheckCircle, Plus, ShieldCheck, Clock, Monitor, Settings, Download, Loader2 } from 'lucide-react';
 import { LuxuryTitle } from '../common/LuxuryTitle';
 import { ProductionView } from './StudioViews';
 import { PageTransition } from '../common/PageTransition';
 import { Modal } from '../common/Modal';
 import { EditProjectModal } from './modals/EditProjectModal';
 import { ImageUploader } from '../common/ImageUploader';
-import { Moodboard } from './Moodboard';
-import { ColorPalette } from './ColorPalette';
 import { AuditTrail } from './AuditTrail';
 import { assetService } from '../../services/assetService';
 import { saveBlob } from '../../utils/download';
 import { useToast } from '../../hooks/useToast';
 
 export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false }) => {
-    // Tabs: 'strategy' (was overview), 'production', 'governance' (was delivery)
-    const [activeTab, setActiveTab] = useState('strategy');
+    const [activeTab, setActiveTab] = useState('production');
     const [isUploadOpen, setIsUploadOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
     const toast = useToast();
+
+    const assets = project.assets || [];
+    const approvedCount = assets.filter(a => a.status === 'approved').length;
+    const allApproved = assets.length > 0 && approvedCount === assets.length;
+    // Studio can always zip; a client can as soon as something is approved
+    const canDownloadZip = !isClient ? assets.length > 0 : approvedCount > 0;
 
     const handleUpload = (fileData) => {
         onAddAsset(fileData);
@@ -47,21 +50,22 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
             <div className="flex items-center gap-2 text-[10px] text-gray-500 mb-4 font-mono uppercase tracking-widest">
                 <button onClick={onBack} className="hover:text-mv-gold transition-colors">Portefeuille</button>
                 <span>/</span>
-                <span className="hover:text-white transition-colors cursor-pointer">{project.client}</span>
+                <span className="text-gray-400">{project.client}</span>
                 <span>/</span>
                 <span className="text-white bg-white/5 px-2 py-0.5 rounded">{project.name}</span>
             </div>
 
             {/* Header */}
-            <div className="flex items-center gap-4 mb-4">
+            <div className="flex items-center gap-4 mb-2">
                 <button
                     onClick={onBack}
                     className="w-8 h-8 flex items-center justify-center rounded-full border border-white/10 text-gray-400 hover:text-white hover:border-mv-gold transition-colors"
-                    title="Retour au Dashboard"
+                    title="Retour"
+                    aria-label="Retour"
                 >
                     <ArrowLeft size={16} />
                 </button>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3">
                         <LuxuryTitle text={project.name} size="text-2xl" className="text-white" />
                         <span className="px-2 py-0.5 text-xs border border-white/20 rounded text-gray-400 uppercase tracking-wider">
@@ -71,13 +75,14 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                     {!isClient && (
                         <>
                             <button
                                 onClick={() => setIsEditOpen(true)}
                                 className="w-10 h-10 flex items-center justify-center rounded-full border border-white/10 text-gray-400 hover:text-white hover:border-mv-gold hover:bg-white/5 transition-colors"
                                 title="Paramètres du projet"
+                                aria-label="Paramètres du projet"
                             >
                                 <Settings size={18} />
                             </button>
@@ -88,12 +93,12 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
                                 title="Ouvrir le Showroom de livraison"
                             >
                                 <Monitor size={16} />
-                                <span className="hidden md:inline">Voir Showroom</span>
+                                <span className="hidden md:inline">Showroom</span>
                             </button>
 
                             <button
                                 onClick={() => setIsUploadOpen(true)}
-                                className="flex items-center gap-2 px-4 py-2 bg-mv-gold/10 text-mv-gold border border-mv-gold/20 rounded-full hover:bg-mv-gold hover:text-black transition-all text-sm font-medium"
+                                className="flex items-center gap-2 px-5 py-2 bg-mv-gold text-black rounded-full hover:bg-white transition-all text-sm font-bold"
                             >
                                 <Plus size={16} />
                                 <span className="hidden md:inline">Ajouter des images</span>
@@ -101,7 +106,7 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
                         </>
                     )}
 
-                    {/* Status (Top Right) */}
+                    {/* Status */}
                     <div className="flex items-center gap-2 text-sm text-gray-400 border-l border-white/10 pl-4">
                         <div className={`w-2 h-2 rounded-full ${project.status === 'in_progress' ? 'bg-orange-500 animate-pulse' :
                             project.status === 'completed' ? 'bg-green-500' : 'bg-gray-500'
@@ -111,17 +116,21 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
                 </div>
             </div>
 
+            {/* Compact brief line — description + key facts, no dedicated tab */}
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-gray-500 mb-6 pl-12">
+                {project.description && <span className="text-gray-400 truncate max-w-xl">{project.description}</span>}
+                <span className="shrink-0">Échéance : <span className="text-gray-300">{project.date || '—'}</span></span>
+                <span className="shrink-0 tabular-nums">{assets.length} fichier{assets.length > 1 ? 's' : ''}</span>
+                {assets.length > 0 && (
+                    <span className="shrink-0 tabular-nums">
+                        <span className={approvedCount === assets.length ? 'text-green-400' : 'text-mv-gold'}>{approvedCount}</span>
+                        <span> / {assets.length} validé{approvedCount > 1 ? 's' : ''}</span>
+                    </span>
+                )}
+            </div>
+
             {/* Workspace Tabs */}
             <div className="flex items-center gap-8 border-b border-white/10 mb-8">
-                <button
-                    onClick={() => setActiveTab('strategy')}
-                    className={`pb-3 text-sm font-medium tracking-widest uppercase transition-colors relative ${activeTab === 'strategy' ? 'text-mv-gold' : 'text-gray-500 hover:text-gray-300'}`}
-                >
-                    <span className="flex items-center gap-2">
-                        <Lightbulb size={14} /> Stratégie
-                    </span>
-                    {activeTab === 'strategy' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-mv-gold"></div>}
-                </button>
                 <button
                     onClick={() => setActiveTab('production')}
                     className={`pb-3 text-sm font-medium tracking-widest uppercase transition-colors relative ${activeTab === 'production' ? 'text-mv-gold' : 'text-gray-500 hover:text-gray-300'}`}
@@ -132,52 +141,18 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
                     {activeTab === 'production' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-mv-gold"></div>}
                 </button>
                 <button
-                    onClick={() => setActiveTab('governance')}
-                    className={`pb-3 text-sm font-medium tracking-widest uppercase transition-colors relative ${activeTab === 'governance' ? 'text-mv-gold' : 'text-gray-500 hover:text-gray-300'}`}
+                    onClick={() => setActiveTab('delivery')}
+                    className={`pb-3 text-sm font-medium tracking-widest uppercase transition-colors relative ${activeTab === 'delivery' ? 'text-mv-gold' : 'text-gray-500 hover:text-gray-300'}`}
                 >
                     <span className="flex items-center gap-2">
-                        <ShieldCheck size={14} /> Gouvernance
+                        <ShieldCheck size={14} /> Livraison
                     </span>
-                    {activeTab === 'governance' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-mv-gold"></div>}
+                    {activeTab === 'delivery' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-mv-gold"></div>}
                 </button>
             </div>
 
             {/* Tab Content */}
             <div className="flex-1 overflow-y-auto pr-2 scrollbar-hide">
-                {activeTab === 'strategy' && (
-                    <div className="space-y-8 animate-fade-in max-w-6xl mx-auto">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            {/* Brief Section */}
-                            <div className="md:col-span-2 space-y-8">
-                                <div>
-                                    <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">Brief Projet</h3>
-                                    <p className="text-gray-400 font-bold tracking-tight text-white leading-relaxed mb-6 bg-white/5 p-6 rounded-lg border border-white/10 hover:border-white/30 transition-all duration-300">
-                                        {project.description || "Aucune description fournie."}
-                                    </p>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="p-4 bg-white/5 rounded border border-white/10 hover:border-white/30 transition-all duration-300">
-                                            <div className="text-xs text-gray-500 uppercase tracking-widest mb-1">Date d'Échéance</div>
-                                            <div className="text-white">{project.date}</div>
-                                        </div>
-                                        <div className="p-4 bg-white/5 rounded border border-white/10 hover:border-white/30 transition-all duration-300">
-                                            <div className="text-xs text-gray-500 uppercase tracking-widest mb-1">Total Fichiers</div>
-                                            <div className="text-white">{project.assets?.length || 0}</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <ColorPalette />
-                            </div>
-
-                            {/* Moodboard Section */}
-                            <div>
-                                <Moodboard />
-                            </div>
-                        </div>
-                    </div>
-                )}
-
                 {activeTab === 'production' && (
                     <ProductionView
                         project={project}
@@ -185,26 +160,41 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
                     />
                 )}
 
-                {activeTab === 'governance' && (
-                    <div className="animate-fade-in max-w-6xl mx-auto">
-                        <div className="mb-8">
-                            {/* Audit Trail */}
-                            <AuditTrail />
-                        </div>
-
-                        {/* Delivery Console (Existing) */}
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center relative overflow-hidden group">
+                {activeTab === 'delivery' && (
+                    <div className="animate-fade-in max-w-6xl mx-auto space-y-8">
+                        {/* Delivery Console */}
+                        <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center relative overflow-hidden">
                             <Package size={48} className="mx-auto text-white/50 mb-6" />
 
-                            <h3 className="text-2xl text-white font-bold tracking-tight text-white mb-2">Console de Livraison</h3>
-                            <p className="text-gray-400 max-w-md mx-auto mb-8 leading-relaxed">
-                                {project.status === 'completed'
-                                    ? "Tous les fichiers sont validés et déverrouillés. Vous pouvez télécharger les assets finaux ci-dessous."
-                                    : "Les fichiers haute définition seront déverrouillés une fois la validation finale approuvée par le client."
-                                }
+                            <h3 className="text-2xl text-white font-bold tracking-tight mb-2">Console de Livraison</h3>
+
+                            {/* Real validation progress */}
+                            {assets.length > 0 ? (
+                                <div className="max-w-sm mx-auto mb-6">
+                                    <div className="flex justify-between text-xs text-gray-500 mb-2">
+                                        <span>Validation client</span>
+                                        <span className="tabular-nums">{approvedCount} / {assets.length}</span>
+                                    </div>
+                                    <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full rounded-full transition-all duration-500 ${allApproved ? 'bg-green-500' : 'bg-mv-gold'}`}
+                                            style={{ width: `${assets.length ? (approvedCount / assets.length) * 100 : 0}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-gray-500 text-sm mb-6">Aucun fichier dans ce projet pour l'instant.</p>
+                            )}
+
+                            <p className="text-gray-400 max-w-md mx-auto mb-8 leading-relaxed text-sm">
+                                {isClient
+                                    ? (approvedCount > 0
+                                        ? 'Vos fichiers validés sont disponibles en haute définition.'
+                                        : 'Approuvez vos visuels pour débloquer les fichiers haute définition.')
+                                    : 'Archive complète des originaux du projet, à tout moment.'}
                             </p>
 
-                            {project.status === 'completed' ? (
+                            {canDownloadZip ? (
                                 <div className="max-w-lg mx-auto animate-fade-in-up">
                                     <button
                                         onClick={handleDownloadAll}
@@ -212,24 +202,24 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
                                         className="w-full flex items-center justify-center gap-3 p-4 bg-mv-gold text-black rounded-lg hover:bg-white transition-all font-bold uppercase tracking-widest disabled:opacity-60 disabled:cursor-not-allowed"
                                     >
                                         {isDownloading ? <Loader2 size={20} className="animate-spin" /> : <Download size={20} />}
-                                        {isDownloading ? 'Préparation…' : 'Télécharger tous les fichiers (ZIP)'}
+                                        {isDownloading ? 'Préparation…' : isClient ? `Télécharger les fichiers validés (${approvedCount})` : 'Télécharger tout le projet (ZIP)'}
                                     </button>
-                                    <p className="text-xs text-gray-500 mt-3">
-                                        {isClient ? 'Vos fichiers validés en haute définition.' : 'Archive de tous les fichiers du projet.'}
-                                    </p>
                                 </div>
                             ) : (
-                                <div className="inline-flex items-center gap-3 bg-white/5 border border-white/10 text-gray-300 px-8 py-3 rounded-lg font-bold uppercase tracking-widest">
+                                <div className="inline-flex items-center gap-3 bg-white/5 border border-white/10 text-gray-300 px-8 py-3 rounded-lg font-bold uppercase tracking-widest text-sm">
                                     <Clock size={16} className="text-mv-gold" />
-                                    En attente de validation client
+                                    En attente de validation
                                 </div>
                             )}
 
-                            <div className="mt-8 pt-8 border-t border-white/10 hover:border-white/30 transition-all duration-300 flex justify-center gap-8 text-xs text-gray-500 font-mono uppercase tracking-widest">
-                                <span className="flex items-center gap-2"><CheckCircle size={12} className="text-green-500" /> Validation Requise</span>
+                            <div className="mt-8 pt-8 border-t border-white/10 flex justify-center gap-8 text-xs text-gray-500 font-mono uppercase tracking-widest">
+                                <span className="flex items-center gap-2"><CheckCircle size={12} className="text-green-500" /> Validation requise</span>
                                 <span className="flex items-center gap-2">Livraison via portail client</span>
                             </div>
                         </div>
+
+                        {/* Audit trail — studio only */}
+                        {!isClient && <AuditTrail />}
                     </div>
                 )}
             </div>

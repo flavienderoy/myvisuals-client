@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { KPIWidgets } from './KPIWidgets';
 import { LuxuryTitle } from '../common/LuxuryTitle';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, FolderOpen, Clock, AlertCircle, Users } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { ProjectCard, ProjectSlider } from './ProjectSlider';
 import { FilterMenu } from './FilterMenu';
@@ -26,6 +25,17 @@ export const Dashboard = () => {
         setSelectedClientForProject(clientName);
         setIsProjectModalOpen(true);
     }, []);
+
+    // Real operational counters (no mock revenue)
+    const stats = useMemo(() => {
+        const allAssets = projects.flatMap(p => p.assets || []);
+        return {
+            activeProjects: projects.filter(p => p.status === 'in_progress').length,
+            pendingApprovals: allAssets.filter(a => a.status === 'pending').length,
+            needsReview: allAssets.filter(a => a.status === 'needs_review').length,
+            clients: clients.length,
+        };
+    }, [projects, clients]);
 
     // Extract unique clients for the filter (based on available data)
     // We use the full 'clients' list from context for the dropdown
@@ -95,6 +105,13 @@ export const Dashboard = () => {
                         <Plus size={16} />
                         <span>Nouvelle Entreprise</span>
                     </button>
+                    <button
+                        onClick={() => openProjectModal()}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-mv-gold hover:bg-white text-black font-bold rounded-full text-sm transition-colors"
+                    >
+                        <Plus size={16} />
+                        <span>Nouveau Projet</span>
+                    </button>
 
                     {/* Advanced Filter Menu */}
                     <FilterMenu
@@ -117,11 +134,36 @@ export const Dashboard = () => {
                 </div>
             </div>
 
-            <KPIWidgets />
-
-            {/* Activity Feed - Full Width */}
-            <div className="mt-12">
-                <ActivityFeed limit={8} showFilters={false} />
+            {/* Operational counters — real data, no vanity metrics */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-xl p-5">
+                    <div className="p-2.5 rounded-lg bg-white/5 text-mv-gold"><FolderOpen size={20} /></div>
+                    <div>
+                        <div className="text-2xl font-bold text-white tabular-nums">{stats.activeProjects}</div>
+                        <div className="text-xs text-gray-500">Projets en cours</div>
+                    </div>
+                </div>
+                <div className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-xl p-5">
+                    <div className="p-2.5 rounded-lg bg-white/5 text-gray-300"><Clock size={20} /></div>
+                    <div>
+                        <div className="text-2xl font-bold text-white tabular-nums">{stats.pendingApprovals}</div>
+                        <div className="text-xs text-gray-500">Visuels en attente de validation</div>
+                    </div>
+                </div>
+                <div className={`flex items-center gap-4 rounded-xl p-5 border ${stats.needsReview > 0 ? 'bg-orange-500/10 border-orange-500/30' : 'bg-white/5 border-white/10'}`}>
+                    <div className={`p-2.5 rounded-lg ${stats.needsReview > 0 ? 'bg-orange-500/10 text-orange-400' : 'bg-white/5 text-gray-500'}`}><AlertCircle size={20} /></div>
+                    <div>
+                        <div className={`text-2xl font-bold tabular-nums ${stats.needsReview > 0 ? 'text-orange-400' : 'text-white'}`}>{stats.needsReview}</div>
+                        <div className="text-xs text-gray-500">Retouches demandées</div>
+                    </div>
+                </div>
+                <div className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-xl p-5">
+                    <div className="p-2.5 rounded-lg bg-white/5 text-gray-300"><Users size={20} /></div>
+                    <div>
+                        <div className="text-2xl font-bold text-white tabular-nums">{stats.clients}</div>
+                        <div className="text-xs text-gray-500">Clients</div>
+                    </div>
+                </div>
             </div>
 
             <div>
@@ -212,6 +254,11 @@ export const Dashboard = () => {
                         </button>
                     </div>
                 )}
+            </div>
+
+            {/* Activity — secondary, below the portfolio */}
+            <div className="pt-4 border-t border-white/10">
+                <ActivityFeed limit={5} showFilters={false} />
             </div>
 
             <AddClientModal

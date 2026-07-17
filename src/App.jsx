@@ -10,7 +10,6 @@ import AssetViewer from './pages/AssetViewer';
 import SignIn from './pages/auth/SignIn';
 import SignUp from './pages/auth/SignUp';
 import Profile from './pages/profile/Profile';
-import { SystemStatus } from './components/studio/SystemStatus';
 import { Loader } from './components/common/Loader';
 import { DataProvider } from './context/DataContext';
 import { AuthProvider } from './context/AuthContext';
@@ -83,12 +82,6 @@ function App() {
               <ProtectedRoute redirectTo="/login">
                 <AssetViewer />
               </ProtectedRoute>
-            } />
-
-            <Route path="/admin" element={
-              <AppLayout>
-                <SystemStatus />
-              </AppLayout>
             } />
 
             <Route path="/profile" element={
