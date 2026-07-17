@@ -44,6 +44,26 @@
       transform: translate(0px, 0px) scale(1);
     }
   }
+
+  /* Entrance animations (were referenced across the app but never defined) */
+  --animate-fade-in-up: fade-in-up 0.4s ease-out both;
+  --animate-fade-in-down: fade-in-down 0.3s ease-out both;
+  --animate-message-in: message-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @keyframes fade-in-up {
+    0% { opacity: 0; transform: translateY(12px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fade-in-down {
+    0% { opacity: 0; transform: translateY(-8px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes message-in {
+    0% { opacity: 0; transform: translateY(8px) scale(0.98); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
 }
 
 /* Custom Base Styles */
@@ -202,4 +222,12 @@ button,
   src: url('./assets/fonts/ABCMonumentGrotesk-BlackItalic-Trial.otf') format('opentype');
   font-weight: 900;
   font-style: italic;
+}
+/* Accessibility — respect reduced motion for decorative/entrance animations */
+@media (prefers-reduced-motion: reduce) {
+  .animate-message-in,
+  .animate-fade-in-up,
+  .animate-fade-in-down {
+    animation: none !important;
+  }
 }

@@ -16,6 +16,21 @@ const formatTime = (iso) => {
     } catch { return ''; }
 };
 
+const initials = (name) => (name || '?').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+
+const Avatar = ({ src, name, size = 32 }) => (
+    src ? (
+        <img src={src} alt={name || ''} style={{ width: size, height: size }} className="rounded-full object-cover border border-white/10 shrink-0" />
+    ) : (
+        <div
+            style={{ width: size, height: size }}
+            className="rounded-full bg-gradient-to-br from-mv-gold to-orange-600 flex items-center justify-center text-black font-bold shrink-0"
+        >
+            <span style={{ fontSize: size * 0.4 }}>{initials(name)}</span>
+        </div>
+    )
+);
+
 /**
  * Real per-project messaging thread, shared by the studio and the client
  * portal. Left: project list. Right: thread + composer (wired to the API).
@@ -125,18 +140,39 @@ export const ProjectMessenger = () => {
                             <p className="text-xs text-gray-600 mt-1">Écrivez le premier message ci-dessous.</p>
                         </div>
                     ) : (
-                        messages.map((msg) => {
+                        messages.map((msg, i) => {
                             const isMine = msg.sender_id === currentUser?.id;
+                            const prev = messages[i - 1];
+                            const next = messages[i + 1];
+                            // Group consecutive messages from the same sender
+                            const firstOfGroup = !prev || prev.sender_id !== msg.sender_id;
+                            const lastOfGroup = !next || next.sender_id !== msg.sender_id;
+                            const senderName = isMine ? (currentUser?.name || 'Moi') : (msg.sender?.name || 'Interlocuteur');
+                            const senderAvatar = isMine ? currentUser?.avatar : msg.sender?.avatar_url;
+
                             return (
-                                <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`max-w-[75%] p-3.5 ${isMine ? 'bg-mv-gold text-black rounded-l-2xl rounded-tr-2xl' : 'bg-white/10 text-white rounded-r-2xl rounded-tl-2xl'}`}>
-                                        {!isMine && (
-                                            <p className="text-[11px] text-mv-gold mb-1 font-bold">{msg.sender?.name || 'Interlocuteur'}</p>
+                                <div key={msg.id} className={`flex items-end gap-2.5 ${isMine ? 'flex-row-reverse' : ''} ${firstOfGroup ? 'mt-4' : 'mt-1'} animate-message-in`}>
+                                    {/* Avatar only on the last bubble of a group */}
+                                    <div className="w-8 shrink-0">
+                                        {lastOfGroup && <Avatar src={senderAvatar} name={senderName} size={32} />}
+                                    </div>
+                                    <div className={`flex flex-col max-w-[72%] ${isMine ? 'items-end' : 'items-start'}`}>
+                                        {firstOfGroup && !isMine && (
+                                            <span className="text-[11px] text-gray-400 font-bold mb-1 px-1">{senderName}</span>
                                         )}
-                                        <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{msg.content}</p>
-                                        <p className={`text-[10px] mt-1.5 text-right ${isMine ? 'text-black/50' : 'text-gray-500'}`}>
-                                            {formatTime(msg.created_at)}
-                                        </p>
+                                        <div
+                                            className={`px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words shadow-sm ${isMine
+                                                ? `bg-mv-gold text-black ${firstOfGroup ? 'rounded-2xl' : 'rounded-2xl'} ${lastOfGroup ? 'rounded-br-md' : ''}`
+                                                : `bg-white/10 text-white ${lastOfGroup ? 'rounded-2xl rounded-bl-md' : 'rounded-2xl'}`
+                                                }`}
+                                        >
+                                            {msg.content}
+                                        </div>
+                                        {lastOfGroup && (
+                                            <span className={`text-[10px] mt-1 px-1 ${isMine ? 'text-gray-500' : 'text-gray-600'}`}>
+                                                {formatTime(msg.created_at)}
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             );
