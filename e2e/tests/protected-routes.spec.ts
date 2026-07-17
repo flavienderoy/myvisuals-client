@@ -13,8 +13,13 @@ test.describe('Protected routes (studio)', () => {
 });
 
 test.describe('Protected routes (client portal)', () => {
-  test('should redirect to /client/login when accessing client projects without auth', async ({ page }) => {
+  test('should redirect to the unified /login when accessing client projects without auth', async ({ page }) => {
     await page.goto('/client/projects');
-    await expect(page).toHaveURL(/.*client\/login/);
+    await expect(page).toHaveURL(/.*login/);
+  });
+
+  test('should redirect to /login when accessing the asset viewer without auth', async ({ page }) => {
+    await page.goto('/assets/some-id');
+    await expect(page).toHaveURL(/.*login/);
   });
 });
