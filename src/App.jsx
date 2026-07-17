@@ -6,6 +6,7 @@ import { ClientLayout } from './layouts/ClientLayout';
 import { ShowroomLayout } from './layouts/ShowroomLayout';
 import Studio from './pages/Studio';
 import Showroom from './pages/Showroom';
+import AssetViewer from './pages/AssetViewer';
 import SignIn from './pages/auth/SignIn';
 import SignUp from './pages/auth/SignUp';
 import Profile from './pages/profile/Profile';
@@ -75,6 +76,13 @@ function App() {
               <ShowroomLayout>
                 <Showroom />
               </ShowroomLayout>
+            } />
+
+            {/* Full-screen asset viewer (studio & client) */}
+            <Route path="/assets/:id" element={
+              <ProtectedRoute redirectTo="/login">
+                <AssetViewer />
+              </ProtectedRoute>
             } />
 
             <Route path="/admin" element={

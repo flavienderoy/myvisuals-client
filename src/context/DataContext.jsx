@@ -319,6 +319,14 @@ export const DataProvider = ({ children }) => {
         }
     };
 
+    // Patch a single asset in local state (e.g. after approve/reject in the viewer)
+    const patchAsset = (assetId, patch) => {
+        setProjects(prev => prev.map(p => ({
+            ...p,
+            assets: (p.assets || []).map(a => a.id === assetId ? { ...a, ...patch } : a),
+        })));
+    };
+
     const resetData = () => {
         // Obsolete
         loadCoreData();
@@ -353,6 +361,7 @@ export const DataProvider = ({ children }) => {
         addProject,
         updateProject,
         addAsset,
+        patchAsset,
         resetData,
         refreshData: loadCoreData,
 
