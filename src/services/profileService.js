@@ -16,5 +16,9 @@ export const profileService = {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
         return data;
+    },
+    deleteAccount: async () => {
+        const { data } = await api.delete('/profile/account');
+        return data;
     }
 };

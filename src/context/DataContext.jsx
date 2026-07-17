@@ -175,11 +175,20 @@ export const DataProvider = ({ children }) => {
                 console.warn("Could not fetch assets", err);
             }
 
+            // Enrich the current user with their profile row (avatar, name, org)
+            let profile = null;
+            try {
+                profile = await profileService.getProfile();
+            } catch {
+                profile = null;
+            }
             setCurrentUser({
                 id: user.id,
-                name: user.user_metadata?.name || 'User',
+                name: profile?.name || user.user_metadata?.name || 'User',
                 email: user.email,
-                role: user.user_metadata?.role || 'Utilisateur'
+                role: user.user_metadata?.role || 'client',
+                avatar: profile?.avatar_url || null,
+                organization: profile?.organization || null,
             });
 
             // Map API data to standard UI format to avoid breaking components
