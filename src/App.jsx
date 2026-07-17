@@ -7,6 +7,7 @@ import { ShowroomLayout } from './layouts/ShowroomLayout';
 import Studio from './pages/Studio';
 import Showroom from './pages/Showroom';
 import AssetViewer from './pages/AssetViewer';
+import Messages from './pages/Messages';
 import SignIn from './pages/auth/SignIn';
 import SignUp from './pages/auth/SignUp';
 import Profile from './pages/profile/Profile';
@@ -82,6 +83,12 @@ function App() {
               <ProtectedRoute redirectTo="/login">
                 <AssetViewer />
               </ProtectedRoute>
+            } />
+
+            <Route path="/messages" element={
+              <AppLayout>
+                <Messages />
+              </AppLayout>
             } />
 
             <Route path="/profile" element={

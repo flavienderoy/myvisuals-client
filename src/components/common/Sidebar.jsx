@@ -2,16 +2,11 @@ import React, { useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard,
-    Image as ImageIcon,
-    Settings,
     ChevronLeft,
     ChevronRight,
-    Activity,
-    LogOut,
     Building2,
-    Star,
+    MessageSquare,
     Monitor,
-    Layers,
     Folder,
     Menu
 } from 'lucide-react';
@@ -23,16 +18,9 @@ import { UserProfileMenu } from '../common/UserProfileMenu';
 export const Sidebar = () => {
     const [collapsed, setCollapsed] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const { currentUser, projects, clients, currentSelection, selectGlobal, selectClient, selectProject } = useData();
+    const { currentUser, clients, currentSelection, selectGlobal, selectClient } = useData();
     const navigate = useNavigate();
     const location = useLocation();
-
-    // Mock Organizations
-    const organizations = [
-        { id: 'org_1', name: 'AntiGravity Studio' },
-        { id: 'org_2', name: 'Freelance Perso' }
-    ];
-    const [currentOrg, setCurrentOrg] = useState(organizations[0]);
 
     // State for expanded clients in the tree
     const [expandedClients, setExpandedClients] = useState({});
@@ -55,11 +43,6 @@ export const Sidebar = () => {
         selectClient(clientName);
         // Auto expand
         setExpandedClients(prev => ({ ...prev, [clientName]: true }));
-    };
-
-    const handleSelectProject = (projectId) => {
-        navigate('/studio');
-        selectProject(projectId);
     };
 
     // If we are strictly on /studio, we show the navigator active state
@@ -148,10 +131,10 @@ export const Sidebar = () => {
                             {!collapsed && <span className="text-sm font-medium">Vue d'ensemble</span>}
                         </button>
 
-                        {/* Other App Links */}
-                        <NavLink to="/client/dashboard" className={({ isActive }) => `w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all mt-1 ${isActive ? 'bg-white/10 text-white border border-white/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
-                            <Building2 size={18} />
-                            {!collapsed && <span className="text-sm font-medium">Client Portal</span>}
+                        {/* Messagerie (same entry as the client portal, for coherence) */}
+                        <NavLink to="/messages" className={({ isActive }) => `w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all mt-1 ${isActive ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+                            <MessageSquare size={18} />
+                            {!collapsed && <span className="text-sm font-medium">Messagerie</span>}
                         </NavLink>
                     </div>
 

@@ -8,71 +8,51 @@ import 'swiper/css/navigation';
 
 // Memoized to prevent unnecessary re-renders when parent updates
 export const ProjectCard = React.memo(({ project, onClick, className = "" }) => {
-    // Determine if we have a secondary image to show (for split view)
-    const hasAssets = project.assets && project.assets.length > 0;
+    const assets = project.assets || [];
+    const hasAssets = assets.length > 0;
+    const approvedCount = assets.filter(a => a.status === 'approved').length;
+    const approvedPct = hasAssets ? Math.round((approvedCount / assets.length) * 100) : 0;
 
-    // Primary Image (Thumbnail) - Will be clipped if there is a secondary image
-    // Secondary Image (First Asset) - Will be the background
-    const secondaryImage = hasAssets
-        ? (project.assets[0].versions?.[0]?.url || project.assets[0].url)
+    // Cover: first asset's watermarked preview when available
+    const coverImage = hasAssets
+        ? (assets[0].versions?.[0]?.url || assets[0].url)
         : null;
 
     return (
         <div
             onClick={onClick}
-            className={`group relative bg-white/5 border border-white/10 hover:border-white/30 transition-all duration-300 rounded-lg overflow-hidden cursor-pointer h-full ${className}`}
+            className={`group relative bg-white/5 border border-white/10 hover:border-mv-gold/40 transition-all duration-300 rounded-lg overflow-hidden cursor-pointer h-full ${className}`}
         >
             <div className="aspect-video relative overflow-hidden bg-mv-black">
-                {/* Secondary Image (Background / Right Side) */}
-                {hasAssets && secondaryImage && (
-                    <div className="absolute inset-0">
+                {coverImage ? (
+                    <>
                         <img
-                            src={secondaryImage}
-                            alt="Project Update"
-                            className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700 ease-out grayscale hover:grayscale-0"
+                            src={coverImage}
+                            alt={project.name}
+                            loading="lazy"
+                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ease-out"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-mv-black/90 to-transparent"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-mv-black/90 via-transparent to-transparent"></div>
+                    </>
+                ) : (
+                    /* No file yet → branded gradient in the DA, no broken image */
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(212,175,55,0.18),transparent_55%),radial-gradient(ellipse_at_bottom_left,rgba(212,175,55,0.08),transparent_50%)] bg-mv-black">
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-6xl font-bold text-white/[0.06] select-none uppercase">
+                                {project.name?.charAt(0) || 'P'}
+                            </span>
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-mv-black/80 to-transparent"></div>
                     </div>
                 )}
 
-                {/* Primary Image (Foreground / Left Side / Clipped) */}
-                <div
-                    className={`absolute inset-0 transition-all duration-500 z-10 ${hasAssets ? 'w-full h-full' : ''}`}
-                    style={hasAssets ? { clipPath: 'polygon(0 0, 65% 0, 40% 100%, 0% 100%)' } : {}}
-                >
-                    <img
-                        src={project.thumbnail}
-                        alt={project.name}
-                        className={`w-full h-full object-cover transition-transform duration-500 ease-out ${hasAssets ? 'group-hover:scale-110' : 'group-hover:scale-105'} opacity-90 group-hover:opacity-100`}
-                    />
-                    {/* Overlay for text readability on primary image */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-mv-black/90 to-transparent"></div>
+                {/* Title */}
+                <div className="absolute bottom-4 left-4 z-20 right-4">
+                    <h3 className="font-medium text-lg text-white leading-tight drop-shadow-md truncate">{project.name}</h3>
                 </div>
 
-                {/* Separator Line (Only if split) */}
-                {hasAssets && (
-                    <div className="absolute inset-0 z-20 pointer-events-none">
-                        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
-                            <line
-                                x1="65" y1="0"
-                                x2="40" y2="100"
-                                stroke="#FFFFFF" // white
-                                strokeWidth="0.5"
-                                vectorEffect="non-scaling-stroke"
-                                strokeOpacity="0.2"
-                            />
-                        </svg>
-                    </div>
-                )}
-
-                {/* Content Overlay */}
-                <div className="absolute bottom-4 left-4 z-30 max-w-[65%]">
-                    <h3 className="font-medium text-lg text-white leading-tight drop-shadow-md">{project.name}</h3>
-                </div>
-
-                {/* Badges */}
-                <div className="absolute top-4 right-4 z-30 flex flex-col items-end gap-2">
-                    {/* Status Badge */}
+                {/* Status badge — the only badge on the cover */}
+                <div className="absolute top-4 right-4 z-20">
                     {project.status === 'in_progress' && (
                         <span className="flex items-center gap-1.5 px-2 py-1 bg-orange-500/20 border border-orange-500/30 text-orange-200 text-xs rounded uppercase tracking-wide backdrop-blur-md">
                             <Clock size={12} /> En Cours
@@ -88,25 +68,26 @@ export const ProjectCard = React.memo(({ project, onClick, className = "" }) => 
                             <Clock size={12} /> En Attente
                         </span>
                     )}
-
-                    {/* Approval Rate Badge (Mocked or Real) */}
-                    {hasAssets && (
-                        <div className="px-2 py-1 bg-black/60 backdrop-blur-md border border-white/10 rounded flex items-center gap-2">
-                            <div className="w-16 h-1 bg-white/20 rounded-full overflow-hidden">
-                                <div className="h-full bg-mv-gold w-[75%]"></div>
-                            </div>
-                            <span className="text-[10px] text-white font-mono">75% OK</span>
-                        </div>
-                    )}
                 </div>
             </div>
 
-            <div className="p-4 flex items-center justify-between border-t border-white/10 hover:border-white/30 transition-all duration-300 relative z-30 bg-white/5">
-                <div className="flex items-center gap-2 text-xs text-gray-400">
+            {/* Footer: file count + real validation progress */}
+            <div className="p-4 flex items-center justify-between gap-4 border-t border-white/10 relative z-20 bg-white/5">
+                <div className="flex items-center gap-2 text-xs text-gray-400 shrink-0">
                     <UploadCloud size={14} />
-                    <span>{project.assets?.length || 0} Fichiers</span>
+                    <span className="tabular-nums">{assets.length} fichier{assets.length > 1 ? 's' : ''}</span>
                 </div>
-                <div className="text-xs text-gray-500 font-mono">Réf : {project.id}</div>
+                {hasAssets && (
+                    <div className="flex items-center gap-2 min-w-0" title={`${approvedCount} visuel${approvedCount > 1 ? 's' : ''} validé${approvedCount > 1 ? 's' : ''} sur ${assets.length}`}>
+                        <div className="w-16 h-1 bg-white/15 rounded-full overflow-hidden shrink-0">
+                            <div
+                                className={`h-full rounded-full transition-all duration-500 ${approvedPct === 100 ? 'bg-green-500' : 'bg-mv-gold'}`}
+                                style={{ width: `${approvedPct}%` }}
+                            ></div>
+                        </div>
+                        <span className="text-[10px] text-gray-400 font-mono tabular-nums shrink-0">{approvedCount}/{assets.length} validés</span>
+                    </div>
+                )}
             </div>
         </div>
     );
