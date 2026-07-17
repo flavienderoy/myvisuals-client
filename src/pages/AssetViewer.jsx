@@ -1,8 +1,8 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft, CheckCircle, Clock, AlertCircle, Download, UploadCloud,
-    MessageSquare, Info, Loader2, Send, X, Columns2,
+    MessageSquare, Info, Loader2, Send, X, Columns2, CornerDownRight,
 } from 'lucide-react';
 import { assetService } from '../services/assetService';
 import { annotationService } from '../services/annotationService';
@@ -51,6 +51,22 @@ const AssetViewer = () => {
     const [draft, setDraft] = useState(null); // {x, y}
     const [draftText, setDraftText] = useState('');
     const [posting, setPosting] = useState(false);
+    const [replyingTo, setReplyingTo] = useState(null); // parent annotation id
+    const [replyText, setReplyText] = useState('');
+    const [replyPosting, setReplyPosting] = useState(false);
+
+    // Split flat annotations into pinned threads (parent) + their replies
+    const threads = useMemo(() => {
+        const roots = annotations.filter((a) => !a.parent_id);
+        const repliesByParent = annotations.reduce((acc, a) => {
+            if (a.parent_id) (acc[a.parent_id] ||= []).push(a);
+            return acc;
+        }, {});
+        return roots.map((r) => ({
+            ...r,
+            replies: (repliesByParent[r.id] || []).sort((a, b) => new Date(a.created_at) - new Date(b.created_at)),
+        }));
+    }, [annotations]);
 
     const [tab, setTab] = useState('comments'); // comments | details
     const [comparing, setComparing] = useState(false);
@@ -112,8 +128,27 @@ const AssetViewer = () => {
         }
     };
 
+    const submitReply = async (parentId) => {
+        if (!replyText.trim() || replyPosting) return;
+        setReplyPosting(true);
+        try {
+            const created = await annotationService.createAnnotation({
+                asset_id: id,
+                content: replyText.trim(),
+                parent_id: parentId,
+            });
+            setAnnotations((prev) => [...prev, created]);
+            setReplyText('');
+            setReplyingTo(null);
+        } catch {
+            toast.error("Impossible d'envoyer la réponse");
+        } finally {
+            setReplyPosting(false);
+        }
+    };
+
     useEffect(() => {
-        const onKey = (e) => { if (e.key === 'Escape') { setDraft(null); setDraftText(''); } };
+        const onKey = (e) => { if (e.key === 'Escape') { setDraft(null); setDraftText(''); setReplyingTo(null); } };
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
     }, []);
@@ -295,8 +330,8 @@ const AssetViewer = () => {
                                 draggable={false}
                             />
 
-                            {/* Pins */}
-                            {annotations.map((ann, i) => (
+                            {/* Pins (top-level threads only) */}
+                            {threads.map((ann, i) => (
                                 <button
                                     key={ann.id || i}
                                     onClick={(e) => { e.stopPropagation(); setSelectedPin(ann.id); setTab('comments'); }}
@@ -335,8 +370,8 @@ const AssetViewer = () => {
                             className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-xs font-bold uppercase tracking-widest transition-colors ${tab === 'comments' ? 'text-mv-gold border-b-2 border-mv-gold' : 'text-gray-500 hover:text-white'}`}
                         >
                             <MessageSquare size={14} /> Commentaires
-                            {annotations.length > 0 && (
-                                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-white/10 text-[10px] text-white">{annotations.length}</span>
+                            {threads.length > 0 && (
+                                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-white/10 text-[10px] text-white">{threads.length}</span>
                             )}
                         </button>
                         <button
@@ -380,32 +415,81 @@ const AssetViewer = () => {
                                 </div>
                             )}
 
-                            {/* List */}
+                            {/* List of threads */}
                             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                                {annotations.length === 0 && !draft ? (
+                                {threads.length === 0 && !draft ? (
                                     <div className="text-center pt-16 px-6">
                                         <MessageSquare size={28} className="mx-auto text-gray-700 mb-3" />
                                         <p className="text-sm text-gray-500">Aucun commentaire pour l'instant.</p>
                                         <p className="text-xs text-gray-600 mt-1">Cliquez sur l'image pour épingler un retour précis.</p>
                                     </div>
                                 ) : (
-                                    annotations.map((ann, i) => (
-                                        <button
+                                    threads.map((ann, i) => (
+                                        <div
                                             key={ann.id || i}
                                             onClick={() => setSelectedPin(ann.id)}
-                                            className={`w-full text-left p-3 rounded-xl border transition-colors ${selectedPin === ann.id ? 'border-mv-gold/60 bg-mv-gold/5' : 'border-white/10 bg-white/[0.03] hover:border-white/25'}`}
+                                            className={`rounded-xl border transition-colors cursor-pointer ${selectedPin === ann.id ? 'border-mv-gold/60 bg-mv-gold/5' : 'border-white/10 bg-white/[0.03] hover:border-white/25'}`}
                                         >
-                                            <div className="flex items-center gap-2 mb-1.5">
-                                                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${selectedPin === ann.id ? 'bg-mv-gold text-black' : 'bg-white/10 text-mv-gold'}`}>
-                                                    {i + 1}
-                                                </span>
-                                                <span className="text-xs font-bold text-white truncate">
-                                                    {ann.author?.name || 'Utilisateur'}
-                                                </span>
-                                                <span className="text-[10px] text-gray-600 ml-auto shrink-0">{formatDate(ann.created_at)}</span>
+                                            {/* Root comment */}
+                                            <div className="p-3">
+                                                <div className="flex items-center gap-2 mb-1.5">
+                                                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${selectedPin === ann.id ? 'bg-mv-gold text-black' : 'bg-white/10 text-mv-gold'}`}>
+                                                        {i + 1}
+                                                    </span>
+                                                    <span className="text-xs font-bold text-white truncate">{ann.author?.name || 'Utilisateur'}</span>
+                                                    <span className="text-[10px] text-gray-600 ml-auto shrink-0">{formatDate(ann.created_at)}</span>
+                                                </div>
+                                                <p className="text-sm text-gray-300 leading-relaxed pl-7">{ann.content}</p>
                                             </div>
-                                            <p className="text-sm text-gray-300 leading-relaxed pl-7">{ann.content}</p>
-                                        </button>
+
+                                            {/* Replies */}
+                                            {ann.replies.length > 0 && (
+                                                <div className="pl-7 pr-3 pb-2 space-y-2 border-l border-white/10 ml-5">
+                                                    {ann.replies.map((rep) => (
+                                                        <div key={rep.id} className="pl-3">
+                                                            <div className="flex items-center gap-2 mb-0.5">
+                                                                <CornerDownRight size={11} className="text-gray-600 shrink-0" />
+                                                                <span className="text-[11px] font-bold text-gray-300 truncate">{rep.author?.name || 'Utilisateur'}</span>
+                                                                <span className="text-[10px] text-gray-600 ml-auto shrink-0">{formatDate(rep.created_at)}</span>
+                                                            </div>
+                                                            <p className="text-sm text-gray-400 leading-relaxed pl-[19px]">{rep.content}</p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* Reply affordance / composer */}
+                                            <div className="px-3 pb-3 pl-10" onClick={(e) => e.stopPropagation()}>
+                                                {replyingTo === ann.id ? (
+                                                    <div className="flex gap-2">
+                                                        <input
+                                                            type="text"
+                                                            autoFocus
+                                                            value={replyText}
+                                                            onChange={(e) => setReplyText(e.target.value)}
+                                                            onKeyDown={(e) => { if (e.key === 'Enter') submitReply(ann.id); }}
+                                                            placeholder="Répondre…"
+                                                            className="flex-1 bg-black/40 border border-white/15 rounded-lg px-3 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-mv-gold/60"
+                                                        />
+                                                        <button
+                                                            onClick={() => submitReply(ann.id)}
+                                                            disabled={!replyText.trim() || replyPosting}
+                                                            aria-label="Envoyer la réponse"
+                                                            className="px-2.5 rounded-lg bg-mv-gold text-black disabled:opacity-40 hover:bg-white transition-colors"
+                                                        >
+                                                            {replyPosting ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => { setReplyingTo(ann.id); setReplyText(''); setSelectedPin(ann.id); }}
+                                                        className="text-[11px] font-medium text-gray-500 hover:text-mv-gold transition-colors flex items-center gap-1.5"
+                                                    >
+                                                        <CornerDownRight size={12} /> Répondre
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
                                     ))
                                 )}
                             </div>
