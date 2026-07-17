@@ -13,38 +13,23 @@ export const ProjectCard = React.memo(({ project, onClick, className = "" }) => 
     const approvedCount = assets.filter(a => a.status === 'approved').length;
     const approvedPct = hasAssets ? Math.round((approvedCount / assets.length) * 100) : 0;
 
-    // Cover: first asset's watermarked preview when available
-    const coverImage = hasAssets
-        ? (assets[0].versions?.[0]?.url || assets[0].url)
-        : null;
-
     return (
         <div
             onClick={onClick}
             className={`group relative bg-white/5 border border-white/10 hover:border-mv-gold/40 transition-all duration-300 rounded-lg overflow-hidden cursor-pointer h-full ${className}`}
         >
-            <div className="aspect-video relative overflow-hidden bg-mv-black">
-                {coverImage ? (
-                    <>
-                        <img
-                            src={coverImage}
-                            alt={project.name}
-                            loading="lazy"
-                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ease-out"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-mv-black/90 via-transparent to-transparent"></div>
-                    </>
-                ) : (
-                    /* No file yet → branded gradient in the DA, no broken image */
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(212,175,55,0.18),transparent_55%),radial-gradient(ellipse_at_bottom_left,rgba(212,175,55,0.08),transparent_50%)] bg-mv-black">
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-6xl font-bold text-white/[0.06] select-none uppercase">
-                                {project.name?.charAt(0) || 'P'}
-                            </span>
-                        </div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-mv-black/80 to-transparent"></div>
-                    </div>
-                )}
+            {/* Illustration square — always a branded DA gradient (like the avatar fallback) */}
+            <div className="aspect-video relative overflow-hidden bg-gradient-to-br from-mv-gold/25 via-mv-black to-mv-black">
+                {/* Soft gold glow, echoing the avatar placeholder */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(212,175,55,0.30),transparent_60%)] group-hover:opacity-90 transition-opacity duration-500"></div>
+                {/* Monogram watermark */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-7xl font-bold text-white/[0.07] select-none uppercase tracking-tight">
+                        {project.name?.charAt(0) || 'P'}
+                    </span>
+                </div>
+                {/* Bottom fade for title legibility */}
+                <div className="absolute inset-0 bg-gradient-to-t from-mv-black/80 to-transparent"></div>
 
                 {/* Title */}
                 <div className="absolute bottom-4 left-4 z-20 right-4">
