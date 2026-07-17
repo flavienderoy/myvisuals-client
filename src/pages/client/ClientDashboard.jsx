@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../../context/DataContext';
 import { LuxuryTitle } from '../../components/common/LuxuryTitle';
 import { ProjectCard } from '../../components/studio/ProjectSlider';
-import { ActivityFeed } from '../../components/studio/ActivityFeed';
-import { FolderOpen, Clock, CheckCircle, Download, ArrowRight, AlertCircle, Eye } from 'lucide-react';
+import { FolderOpen, Clock, CheckCircle, Download, ArrowRight } from 'lucide-react';
 
 const ClientDashboard = () => {
     const navigate = useNavigate();
@@ -13,100 +12,101 @@ const ClientDashboard = () => {
     // The API already returns only the projects linked to this client account.
     const clientProjects = projects;
 
-    const stats = {
-        activeProjects: clientProjects.filter(p => p.status === 'in_progress').length,
-        pendingApprovals: clientProjects.reduce((acc, p) => acc + (p.assets?.filter(a => a.status === 'pending').length || 0), 0),
-        filesReady: clientProjects.reduce((acc, p) => acc + (p.assets?.filter(a => a.status === 'approved').length || 0), 0)
-    };
+    // The client's actual work queue: every visual awaiting their decision
+    const toReview = useMemo(() => (
+        clientProjects.flatMap(p =>
+            (p.assets || [])
+                .filter(a => a.status === 'pending')
+                .map(a => ({ ...a, projectName: p.name }))
+        )
+    ), [clientProjects]);
+
+    const filesReady = clientProjects.reduce((acc, p) => acc + (p.assets?.filter(a => a.status === 'approved').length || 0), 0);
 
     return (
-        <div className="max-w-7xl mx-auto px-10 py-12 space-y-16 animate-fade-in overflow-hidden">
+        <div className="max-w-7xl mx-auto px-10 py-12 space-y-14 animate-fade-in overflow-hidden">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-                <div>
-                    <LuxuryTitle text="Espace Client" size="text-4xl" className="text-white mb-3" />
-                    <p className="text-gray-400 text-lg">Bienvenue, <span className="text-white">{currentUser?.name || 'cher client'}</span>.</p>
-                </div>
-                <div className="text-right">
-                    <p className="text-xs text-gray-500 uppercase tracking-widest font-medium mb-1">Dernière Connexion</p>
-                    <p className="text-sm text-white">Aujourd'hui, 09:45</p>
-                </div>
+            <div>
+                <LuxuryTitle text="Espace Client" size="text-4xl" className="text-white mb-3" />
+                <p className="text-gray-400 text-lg">Bienvenue, <span className="text-white">{currentUser?.name || 'cher client'}</span>.</p>
             </div>
 
-            {/* KPI Cards matching Studio DA */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                {/* Active Projects */}
-                <div className="bg-white/5 border border-white/10 hover:border-white/20 transition-all duration-300 rounded-xl p-8 group">
-                    <div className="flex items-start justify-between mb-4">
-                        <div className="p-3 bg-white/5 rounded-lg text-gray-400 group-hover:text-white transition-colors border border-white/5">
-                            <FolderOpen size={20} />
-                        </div>
-                    </div>
-                    <div>
-                        <p className="text-gray-500 text-xs uppercase tracking-widest font-medium mb-1">Projets Actifs</p>
-                        <h3 className="text-3xl font-normal tracking-tight text-white">{stats.activeProjects}</h3>
-                    </div>
+            {/* ===== Work queue: visuals awaiting the client's decision ===== */}
+            <section>
+                <div className="flex items-center justify-between mb-6 border-b border-white/10 pb-3">
+                    <h2 className="text-sm font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                        <Clock size={14} className="text-mv-gold" />
+                        À valider
+                        {toReview.length > 0 && (
+                            <span className="px-2 py-0.5 rounded-full bg-mv-gold text-black text-[10px] font-bold tabular-nums">{toReview.length}</span>
+                        )}
+                    </h2>
                 </div>
 
-                {/* Pending Approvals */}
-                <div className="bg-white/5 border border-white/10 hover:border-white/20 transition-all duration-300 rounded-xl p-8 group">
-                    <div className="flex items-start justify-between mb-4">
-                        <div className="p-3 bg-white/5 rounded-lg text-gray-400 group-hover:text-white transition-colors border border-white/5">
-                            <Clock size={20} />
+                {toReview.length > 0 ? (
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        {toReview.slice(0, 10).map((asset) => (
+                            <button
+                                key={asset.id}
+                                onClick={() => navigate(`/assets/${asset.id}`)}
+                                className="group relative aspect-[4/5] bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-mv-gold/60 transition-all duration-300 text-left"
+                            >
+                                <img
+                                    src={asset.url}
+                                    alt={asset.name}
+                                    loading="lazy"
+                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent">
+                                    <div className="absolute bottom-3 left-3 right-3">
+                                        <p className="text-white text-sm font-medium truncate">{asset.name}</p>
+                                        <p className="text-[10px] text-gray-400 truncate mb-2">{asset.projectName}</p>
+                                        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-mv-gold">
+                                            Donner mon avis <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform" />
+                                        </span>
+                                    </div>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-4 py-8 px-6 bg-white/5 rounded-xl border border-white/10">
+                        <CheckCircle size={22} className="text-green-400 shrink-0" />
+                        <div>
+                            <p className="text-white text-sm font-medium">Tout est à jour.</p>
+                            <p className="text-gray-500 text-xs mt-0.5">Aucun visuel n'attend votre validation pour le moment.</p>
                         </div>
                     </div>
-                    <div>
-                        <p className="text-gray-500 text-xs uppercase tracking-widest font-medium mb-1">Approbations</p>
-                        <h3 className="text-3xl font-normal tracking-tight text-white">{stats.pendingApprovals}</h3>
-                    </div>
-                </div>
+                )}
+            </section>
 
-                {/* Files Ready */}
-                <div className="bg-white/5 border border-white/10 hover:border-white/20 transition-all duration-300 rounded-xl p-8 group">
-                    <div className="flex items-start justify-between mb-4">
-                        <div className="p-3 bg-white/5 rounded-lg text-gray-400 group-hover:text-white transition-colors border border-white/5">
+            {/* ===== Downloads shortcut (only when something is ready) ===== */}
+            {filesReady > 0 && (
+                <button
+                    onClick={() => navigate('/client/downloads')}
+                    className="w-full flex items-center justify-between p-6 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-mv-gold/40 rounded-xl transition-all group"
+                >
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 rounded-lg bg-mv-gold/10 text-mv-gold border border-mv-gold/20">
                             <Download size={20} />
                         </div>
+                        <div className="text-left">
+                            <p className="text-white font-medium">
+                                {filesReady} fichier{filesReady > 1 ? 's' : ''} haute définition prêt{filesReady > 1 ? 's' : ''} au téléchargement
+                            </p>
+                            <p className="text-xs text-gray-500 mt-0.5">Vos visuels validés, en qualité originale.</p>
+                        </div>
                     </div>
-                    <div>
-                        <p className="text-gray-500 text-xs uppercase tracking-widest font-medium mb-1">Fichiers Prêts</p>
-                        <h3 className="text-3xl font-normal tracking-tight text-white">{stats.filesReady}</h3>
-                    </div>
-                </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 border-b border-white/5 pb-10">
-                <button
-                    onClick={() => navigate('/client/projects')}
-                    className="bg-white hover:bg-gray-200 text-black font-medium py-4 px-6 rounded-lg transition-all flex items-center justify-center gap-3 group"
-                >
-                    <FolderOpen size={18} />
-                    <span>Voir mes Projets</span>
-                    <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight size={18} className="text-gray-500 group-hover:text-mv-gold group-hover:translate-x-1 transition-all" />
                 </button>
-                <button className="bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium py-4 px-6 rounded-lg transition-all flex items-center justify-center gap-3">
-                    <AlertCircle size={18} className="text-white/60" />
-                    <span>Voir les Approbations</span>
-                </button>
-                <button className="bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium py-4 px-6 rounded-lg transition-all flex items-center justify-center gap-3">
-                    <CheckCircle size={18} className="text-white/60" />
-                    <span>Messagerie Complète</span>
-                </button>
-            </div>
+            )}
 
-            {/* Recent Activity */}
-            <div>
-                <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-3">
-                    <h2 className="text-sm font-bold text-gray-500 uppercase tracking-widest">Activité du Portfolio</h2>
-                </div>
-                <ActivityFeed limit={5} showFilters={false} />
-            </div>
-
-            {/* Projects List */}
-            <div>
-                <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-3">
-                    <h2 className="text-sm font-bold text-gray-500 uppercase tracking-widest">Vos Projets</h2>
+            {/* ===== Projects ===== */}
+            <section>
+                <div className="flex items-center justify-between mb-6 border-b border-white/10 pb-3">
+                    <h2 className="text-sm font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                        <FolderOpen size={14} /> Vos Projets
+                    </h2>
                 </div>
                 {clientProjects.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -123,10 +123,11 @@ const ClientDashboard = () => {
                     </div>
                 ) : (
                     <div className="text-center py-12 bg-white/5 rounded-xl border border-white/10">
-                        <p className="text-gray-500 text-sm">Aucun projet en cours.</p>
+                        <p className="text-gray-500 text-sm">Aucun projet pour le moment.</p>
+                        <p className="text-gray-600 text-xs mt-1">Vos projets apparaîtront ici dès que votre studio les partagera.</p>
                     </div>
                 )}
-            </div>
+            </section>
         </div>
     );
 };
