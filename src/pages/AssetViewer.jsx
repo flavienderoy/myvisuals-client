@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
     ArrowLeft, CheckCircle, Clock, AlertCircle, Download, UploadCloud,
     MessageSquare, Info, Loader2, Send, X, Columns2, CornerDownRight,
@@ -55,6 +55,17 @@ const AssetViewer = () => {
     const [draftText, setDraftText] = useState('');
     const [posting, setPosting] = useState(false);
     const [projectMembers, setProjectMembers] = useState([]);
+
+    // Deep-link from a notification: ?comment=<id> highlights that thread
+    const [searchParams] = useSearchParams();
+    const commentParam = searchParams.get('comment');
+    useEffect(() => {
+        if (commentParam && annotations.some((a) => a.id === commentParam)) {
+            setSelectedPin(commentParam);
+            setDraft(null);
+            setTab('comments');
+        }
+    }, [commentParam, annotations]);
 
     // Split flat annotations into pinned threads (parent) + their replies
     const threads = useMemo(() => {
