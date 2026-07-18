@@ -67,9 +67,20 @@ const AssetViewer = () => {
         }
     }, [commentParam, annotations]);
 
-    // Split flat annotations into pinned threads (parent) + their replies
+    // Currently displayed version: the latest uploaded one, or the original (null)
+    const currentVersionId = useMemo(() => {
+        const vs = asset?.versions || [];
+        if (!vs.length) return null;
+        return [...vs].sort((a, b) => (a.version_number || 0) - (b.version_number || 0)).slice(-1)[0]?.id || null;
+    }, [asset]);
+
+    // Split flat annotations into pinned threads (parent) + their replies.
+    // Only show pins that belong to the version currently displayed — a comment
+    // left on V1 must not appear on V2.
     const threads = useMemo(() => {
-        const roots = annotations.filter((a) => !a.parent_id);
+        const roots = annotations.filter(
+            (a) => !a.parent_id && (a.version_id ?? null) === (currentVersionId ?? null)
+        );
         const repliesByParent = annotations.reduce((acc, a) => {
             if (a.parent_id) (acc[a.parent_id] ||= []).push(a);
             return acc;
@@ -78,7 +89,7 @@ const AssetViewer = () => {
             ...r,
             replies: (repliesByParent[r.id] || []).sort((a, b) => new Date(a.created_at) - new Date(b.created_at)),
         }));
-    }, [annotations]);
+    }, [annotations, currentVersionId]);
 
     const [tab, setTab] = useState('comments'); // comments | details
     const [comparing, setComparing] = useState(false);
@@ -188,6 +199,7 @@ const AssetViewer = () => {
                 content: draftText.trim(),
                 x_position: draft.x,
                 y_position: draft.y,
+                version_id: currentVersionId,
                 mentions: mentions
             });
             setAnnotations((prev) => [...prev, created]);
@@ -207,6 +219,7 @@ const AssetViewer = () => {
                 asset_id: id,
                 content: text,
                 parent_id: parentId,
+                version_id: currentVersionId,
                 mentions: mentions
             });
             setAnnotations((prev) => [...prev, created]);
