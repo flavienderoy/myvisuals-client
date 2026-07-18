@@ -111,7 +111,11 @@ const AssetViewer = () => {
     const sortedVersions = [...versions].sort((a, b) => (a.version_number || 0) - (b.version_number || 0));
     const latestVersion = sortedVersions[sortedVersions.length - 1];
     const displayUrl = latestVersion?.url || asset?.url;
-    const firstVersionUrl = sortedVersions[0]?.url;
+    // The original asset image is V1; uploaded versions are V2+. Comparison
+    // always shows the original ("before") vs the latest version ("after").
+    const compareBeforeUrl = asset?.url;
+    const compareAfterUrl = latestVersion?.url || asset?.url;
+    const canCompare = sortedVersions.length >= 1 && compareBeforeUrl && compareAfterUrl;
 
     // ----- Annotations -----
     const handleCanvasClick = (e) => {
@@ -417,13 +421,13 @@ const AssetViewer = () => {
                     ref={viewportRef}
                     className="flex-1 relative flex items-center justify-center bg-[#0a0a0a] p-4 md:p-8 min-w-0 overflow-hidden"
                 >
-                    {comparing && firstVersionUrl ? (
+                    {comparing && canCompare ? (
                         <div className="w-full max-w-5xl">
                             <DiffComparator
-                                beforeImage={firstVersionUrl}
-                                afterImage={displayUrl}
-                                beforeLabel={`V${sortedVersions[0]?.version_number ?? 1}`}
-                                afterLabel={`V${latestVersion?.version_number ?? sortedVersions.length}`}
+                                beforeImage={compareBeforeUrl}
+                                afterImage={compareAfterUrl}
+                                beforeLabel="V1"
+                                afterLabel={`V${sortedVersions.length + 1}`}
                             />
                         </div>
                     ) : (
