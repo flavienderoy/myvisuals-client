@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { User, Mail, Camera, Check, LogOut, Loader2, Building2, ShieldAlert } from 'lucide-react';
+import { User, Mail, Camera, Check, LogOut, Loader2, Building2, ShieldAlert, Bell } from 'lucide-react';
 import { LuxuryTitle } from '../../components/common/LuxuryTitle';
 import { PageTransition } from '../../components/common/PageTransition';
 import { useData } from '../../context/DataContext';
@@ -22,6 +22,12 @@ const Profile = () => {
     const [saving, setSaving] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
+    
+    const [prefs, setPrefs] = useState({
+        mentions_in_app: true,
+        messages_in_app: true,
+        projects_in_app: true
+    });
 
     const email = currentUser?.email || '';
     const role = currentUser?.role === 'client' ? 'Client' : 'Studio';
@@ -33,6 +39,9 @@ const Profile = () => {
                 setName(p.name || '');
                 setOrganization(p.organization || '');
                 setAvatar(p.avatar_url || null);
+                if (p.notification_preferences) {
+                    setPrefs(p.notification_preferences);
+                }
             } catch {
                 setName(currentUser?.name || '');
                 setAvatar(currentUser?.avatar || null);
@@ -61,7 +70,11 @@ const Profile = () => {
         if (!name.trim()) return toast.error('Le nom ne peut pas être vide');
         setSaving(true);
         try {
-            await profileService.updateProfile({ name: name.trim(), organization: organization.trim() || null });
+            await profileService.updateProfile({ 
+                name: name.trim(), 
+                organization: organization.trim() || null,
+                notification_preferences: prefs
+            });
             toast.success('Profil enregistré');
             refreshData?.();
         } catch {
@@ -202,6 +215,36 @@ const Profile = () => {
                                     {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
                                     Enregistrer
                                 </button>
+                            </div>
+                        </div>
+
+                        {/* Notification Preferences */}
+                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-2xl shadow-lg">
+                            <h4 className="flex items-center gap-2 text-white font-medium mb-6">
+                                <Bell size={18} className="text-mv-gold" /> Préférences de notifications
+                            </h4>
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between p-4 bg-black/20 border border-white/5 rounded-xl">
+                                    <div>
+                                        <p className="text-sm font-bold text-white">Mentions</p>
+                                        <p className="text-xs text-gray-400">Quand quelqu'un te mentionne avec @</p>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" className="sr-only peer" checked={prefs.mentions_in_app} onChange={e => setPrefs({...prefs, mentions_in_app: e.target.checked})} />
+                                        <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-mv-gold"></div>
+                                    </label>
+                                </div>
+                                
+                                <div className="flex items-center justify-between p-4 bg-black/20 border border-white/5 rounded-xl">
+                                    <div>
+                                        <p className="text-sm font-bold text-white">Nouveaux messages</p>
+                                        <p className="text-xs text-gray-400">Quand on t'envoie un message dans un projet</p>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" className="sr-only peer" checked={prefs.messages_in_app} onChange={e => setPrefs({...prefs, messages_in_app: e.target.checked})} />
+                                        <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-mv-gold"></div>
+                                    </label>
+                                </div>
                             </div>
                         </div>
 

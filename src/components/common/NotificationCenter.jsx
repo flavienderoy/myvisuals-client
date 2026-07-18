@@ -33,7 +33,7 @@ const NotificationItem = ({ notification, onMarkRead, onDismiss, onClick }) => {
                         {notification.message}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                        {new Date(notification.timestamp).toLocaleString('fr-FR')}
+                        {new Date(notification.created_at).toLocaleString('fr-FR')}
                     </p>
                 </div>
 
@@ -99,9 +99,9 @@ export const NotificationCenter = () => {
         if (!notification.read) {
             markAsRead(notification.id);
         }
-        if (notification.projectId) {
+        if (notification.project_id) {
             navigate('/studio');
-            selectProject(notification.projectId);
+            selectProject(notification.project_id);
         }
         setIsOpen(false);
     };

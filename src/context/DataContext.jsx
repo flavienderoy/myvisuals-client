@@ -15,6 +15,7 @@ import { watermarkService } from '../services/watermarkService';
 import { timeEntryService } from '../services/timeEntryService';
 import { auditLogService } from '../services/auditLogService';
 import { permissionService } from '../services/permissionService';
+import { teamService } from '../services/teamService';
 import { supabase } from '../supabaseClient';
 
 import {
@@ -175,12 +176,17 @@ export const DataProvider = ({ children }) => {
                 console.warn("Could not fetch assets", err);
             }
 
-            // Enrich the current user with their profile row (avatar, name, org)
+            // Enrich the current user with their profile row (avatar, name, org) and studio membership
             let profile = null;
+            let studioInfo = null;
             try {
-                profile = await profileService.getProfile();
+                [profile, studioInfo] = await Promise.all([
+                    profileService.getProfile().catch(() => null),
+                    teamService.getMyStudio().catch(() => null)
+                ]);
             } catch {
                 profile = null;
+                studioInfo = null;
             }
             setCurrentUser({
                 id: user.id,
@@ -188,7 +194,8 @@ export const DataProvider = ({ children }) => {
                 email: user.email,
                 role: user.user_metadata?.role || 'client',
                 avatar: profile?.avatar_url || null,
-                organization: profile?.organization || null,
+                org: profile?.organization || '',
+                studio: studioInfo || null,
             });
 
             // Map API data to standard UI format to avoid breaking components
