@@ -33,6 +33,7 @@ const AnnotationPopup = ({
     pinIndex,
     anchorPosition,
     canvasRef,
+    viewVersion,
     onReply,
     onResolve,
     onReopen,
@@ -68,36 +69,31 @@ const AnnotationPopup = ({
         );
     };
 
-    // Calculate popup position relative to canvas
+    // Position the popup in SCREEN space (position: fixed) so it stays a normal
+    // size and correctly placed even when the canvas is zoomed/panned.
     useEffect(() => {
         if (!canvasRef?.current || !popupRef.current) return;
 
         const canvas = canvasRef.current.getBoundingClientRect();
-        const popup = popupRef.current;
-        const popupRect = popup.getBoundingClientRect();
+        const popupRect = popupRef.current.getBoundingClientRect();
 
-        const pinXPx = (anchorPosition.x / 100) * canvas.width;
-        const pinYPx = (anchorPosition.y / 100) * canvas.height;
+        // Pin position in screen coordinates (canvas rect already reflects zoom/pan)
+        const pinScreenX = canvas.left + (anchorPosition.x / 100) * canvas.width;
+        const pinScreenY = canvas.top + (anchorPosition.y / 100) * canvas.height;
 
-        const OFFSET = 20; // distance from pin
+        const OFFSET = 20;
         const POPUP_WIDTH = Math.min(360, window.innerWidth - 32);
 
-        // Decide left vs right
-        let left;
-        if (pinXPx + OFFSET + POPUP_WIDTH < canvas.width) {
-            left = pinXPx + OFFSET;
-        } else {
-            left = pinXPx - OFFSET - POPUP_WIDTH;
-        }
-        left = Math.max(8, Math.min(left, canvas.width - POPUP_WIDTH - 8));
+        // Prefer the right of the pin; flip left if it would overflow the viewport
+        let left = pinScreenX + OFFSET;
+        if (left + POPUP_WIDTH > window.innerWidth - 8) left = pinScreenX - OFFSET - POPUP_WIDTH;
+        left = Math.max(8, Math.min(left, window.innerWidth - POPUP_WIDTH - 8));
 
-        // Decide top
-        let top = pinYPx - 20;
-        const maxTop = canvas.height - popupRect.height - 8;
-        top = Math.max(8, Math.min(top, maxTop));
+        let top = pinScreenY - 20;
+        top = Math.max(8, Math.min(top, window.innerHeight - popupRect.height - 8));
 
         setPopupStyle({ left: `${left}px`, top: `${top}px`, width: `${POPUP_WIDTH}px` });
-    }, [anchorPosition, canvasRef]);
+    }, [anchorPosition, canvasRef, viewVersion]);
 
     // Auto-focus draft input
     useEffect(() => {
@@ -175,7 +171,7 @@ const AnnotationPopup = ({
         <div
             ref={popupRef}
             onClick={(e) => e.stopPropagation()}
-            className="absolute z-50 animate-popup-in"
+            className="fixed z-50 animate-popup-in"
             style={popupStyle}
         >
             <div className="bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/15 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.6),0_0_0_1px_rgba(212,175,55,0.08)] overflow-hidden">

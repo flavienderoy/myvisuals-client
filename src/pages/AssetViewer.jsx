@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft, CheckCircle, Clock, AlertCircle, Download, UploadCloud,
     MessageSquare, Info, Loader2, Send, X, Columns2, CornerDownRight,
+    ZoomIn, ZoomOut, Maximize2,
 } from 'lucide-react';
 import { assetService } from '../services/assetService';
 import { annotationService } from '../services/annotationService';
@@ -107,9 +108,55 @@ const AssetViewer = () => {
         const rect = canvasRef.current.getBoundingClientRect();
         const x = ((e.clientX - rect.left) / rect.width) * 100;
         const y = ((e.clientY - rect.top) / rect.height) * 100;
+        if (x < 0 || x > 100 || y < 0 || y > 100) return;
         setDraft({ x, y });
         setSelectedPin(null);
         setTab('comments');
+    };
+
+    // ===== Pan & Zoom =====
+    const viewportRef = useRef(null);
+    const [zoom, setZoom] = useState(1);
+    const [offset, setOffset] = useState({ x: 0, y: 0 });
+    const panRef = useRef(null);
+
+    const resetView = useCallback(() => { setZoom(1); setOffset({ x: 0, y: 0 }); }, []);
+    const zoomBy = useCallback((factor) => {
+        setZoom((z) => {
+            const nz = Math.min(4, Math.max(1, z * factor));
+            if (nz === 1) setOffset({ x: 0, y: 0 });
+            return nz;
+        });
+    }, []);
+
+    // Zoom on wheel (non-passive so we can preventDefault the page scroll)
+    useEffect(() => {
+        const el = viewportRef.current;
+        if (!el) return;
+        const onWheel = (e) => {
+            if (comparing) return;
+            e.preventDefault();
+            zoomBy(e.deltaY < 0 ? 1.15 : 1 / 1.15);
+        };
+        el.addEventListener('wheel', onWheel, { passive: false });
+        return () => el.removeEventListener('wheel', onWheel);
+    }, [comparing, zoomBy]);
+
+    const onPointerDown = (e) => {
+        panRef.current = { sx: e.clientX, sy: e.clientY, ox: offset.x, oy: offset.y, moved: false, annotatable: e.target.tagName === 'IMG' };
+    };
+    const onPointerMove = (e) => {
+        const p = panRef.current;
+        if (!p) return;
+        const dx = e.clientX - p.sx;
+        const dy = e.clientY - p.sy;
+        if (!p.moved && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) p.moved = true;
+        if (p.moved && zoom > 1) setOffset({ x: p.ox + dx, y: p.oy + dy });
+    };
+    const onPointerUp = (e) => {
+        const p = panRef.current;
+        panRef.current = null;
+        if (p && !p.moved && p.annotatable) handleCanvasClick(e);
     };
 
     const submitAnnotation = async () => {
@@ -351,7 +398,10 @@ const AssetViewer = () => {
             {/* ===== Body ===== */}
             <div className="flex-1 flex min-h-0">
                 {/* Canvas */}
-                <main className="flex-1 relative flex items-center justify-center bg-[#0a0a0a] p-4 md:p-8 min-w-0">
+                <main
+                    ref={viewportRef}
+                    className="flex-1 relative flex items-center justify-center bg-[#0a0a0a] p-4 md:p-8 min-w-0 overflow-hidden"
+                >
                     {comparing && firstVersionUrl ? (
                         <div className="w-full max-w-5xl">
                             <DiffComparator beforeImage={firstVersionUrl} afterImage={displayUrl} />
@@ -359,8 +409,11 @@ const AssetViewer = () => {
                     ) : (
                         <div
                             ref={canvasRef}
-                            onClick={handleCanvasClick}
-                            className="relative max-w-full max-h-full cursor-crosshair select-none"
+                            onPointerDown={onPointerDown}
+                            onPointerMove={onPointerMove}
+                            onPointerUp={onPointerUp}
+                            className={`relative max-w-full max-h-full select-none ${zoom > 1 ? 'cursor-grab active:cursor-grabbing' : 'cursor-crosshair'}`}
+                            style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`, transition: panRef.current ? 'none' : 'transform 0.12s ease-out' }}
                         >
                             <img
                                 src={displayUrl}
@@ -390,7 +443,7 @@ const AssetViewer = () => {
                                                 ? 'bg-mv-gold text-black border-white scale-110'
                                                 : 'bg-black/80 text-mv-gold border-mv-gold hover:scale-110')
                                     }`}
-                                    style={{ left: `${ann.x ?? ann.x_position}%`, top: `${ann.y ?? ann.y_position}%` }}
+                                    style={{ left: `${ann.x ?? ann.x_position}%`, top: `${ann.y ?? ann.y_position}%`, transform: `scale(${(selectedPin === ann.id ? 1.12 : 1) / zoom})` }}
                                 >
                                     {i + 1}
                                 </button>
@@ -400,49 +453,72 @@ const AssetViewer = () => {
                             {draft && (
                                 <div
                                     className="absolute w-7 h-7 -ml-3.5 -mt-3.5 bg-mv-gold rounded-full border-2 border-white shadow-lg animate-annotation-pulse"
-                                    style={{ left: `${draft.x}%`, top: `${draft.y}%` }}
+                                    style={{ left: `${draft.x}%`, top: `${draft.y}%`, transform: `scale(${1 / zoom})` }}
                                 />
                             )}
 
-                            {/* ===== POPUP: New draft ===== */}
-                            {draft && (
-                                <AnnotationPopup
-                                    isNewDraft
-                                    anchorPosition={draft}
-                                    canvasRef={canvasRef}
-                                    draftText={draftText}
-                                    onDraftTextChange={setDraftText}
-                                    onSubmitDraft={submitAnnotation}
-                                    draftPosting={posting}
-                                    projectMembers={projectMembers}
-                                    onClose={() => { setDraft(null); setDraftText(''); }}
-                                />
-                            )}
-
-                            {/* ===== POPUP: Selected thread ===== */}
-                            {selectedThread && !draft && (
-                                <AnnotationPopup
-                                    thread={selectedThread}
-                                    pinIndex={selectedPinIndex}
-                                    anchorPosition={{
-                                        x: selectedThread.x ?? selectedThread.x_position,
-                                        y: selectedThread.y ?? selectedThread.y_position,
-                                    }}
-                                    canvasRef={canvasRef}
-                                    onReply={handleReply}
-                                    onResolve={handleResolve}
-                                    onReopen={handleReopen}
-                                    onClose={() => setSelectedPin(null)}
-                                    projectMembers={projectMembers}
-                                />
-                            )}
                         </div>
+                    )}
+
+                    {/* ===== POPUP: New draft (fixed, outside the zoom transform) ===== */}
+                    {!comparing && draft && (
+                        <AnnotationPopup
+                            isNewDraft
+                            anchorPosition={draft}
+                            canvasRef={canvasRef}
+                            viewVersion={`${zoom}:${offset.x}:${offset.y}`}
+                            draftText={draftText}
+                            onDraftTextChange={setDraftText}
+                            onSubmitDraft={submitAnnotation}
+                            draftPosting={posting}
+                            projectMembers={projectMembers}
+                            onClose={() => { setDraft(null); setDraftText(''); }}
+                        />
+                    )}
+
+                    {/* ===== POPUP: Selected thread ===== */}
+                    {!comparing && selectedThread && !draft && (
+                        <AnnotationPopup
+                            thread={selectedThread}
+                            pinIndex={selectedPinIndex}
+                            anchorPosition={{
+                                x: selectedThread.x ?? selectedThread.x_position,
+                                y: selectedThread.y ?? selectedThread.y_position,
+                            }}
+                            canvasRef={canvasRef}
+                            viewVersion={`${zoom}:${offset.x}:${offset.y}`}
+                            onReply={handleReply}
+                            onResolve={handleResolve}
+                            onReopen={handleReopen}
+                            onClose={() => setSelectedPin(null)}
+                            projectMembers={projectMembers}
+                        />
                     )}
 
                     {/* Hint */}
                     {!comparing && !draft && !selectedPin && (
                         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-black/70 border border-white/10 text-[11px] text-gray-400 pointer-events-none">
-                            Cliquez sur l'image pour ajouter un commentaire
+                            {zoom > 1 ? 'Glissez pour vous déplacer • cliquez pour commenter' : 'Cliquez sur l\'image pour ajouter un commentaire'}
+                        </div>
+                    )}
+
+                    {/* Zoom controls */}
+                    {!comparing && (
+                        <div className="absolute bottom-4 right-4 flex items-center gap-1 bg-black/70 border border-white/10 rounded-full p-1 backdrop-blur-sm">
+                            <button onClick={() => zoomBy(1 / 1.3)} disabled={zoom <= 1} aria-label="Dézoomer" className="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:hover:bg-transparent">
+                                <ZoomOut size={16} />
+                            </button>
+                            <button onClick={resetView} aria-label="Réinitialiser le zoom" className="min-w-[3rem] text-center text-xs font-mono text-gray-300 hover:text-white tabular-nums transition-colors">
+                                {Math.round(zoom * 100)}%
+                            </button>
+                            <button onClick={() => zoomBy(1.3)} disabled={zoom >= 4} aria-label="Zoomer" className="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:hover:bg-transparent">
+                                <ZoomIn size={16} />
+                            </button>
+                            {zoom > 1 && (
+                                <button onClick={resetView} aria-label="Ajuster à l'écran" className="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 transition-colors">
+                                    <Maximize2 size={15} />
+                                </button>
+                            )}
                         </div>
                     )}
                 </main>
