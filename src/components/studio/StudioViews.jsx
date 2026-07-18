@@ -10,14 +10,21 @@ export const ProductionView = ({ project, onOpenUpload }) => {
     const [viewMode, setViewMode] = useState('grid');
     const [newLookName, setNewLookName] = useState('');
     const [isCreatingLook, setIsCreatingLook] = useState(false);
+    const [activeTag, setActiveTag] = useState(null);
 
-    // Group assets by looks
-    const assetsByLook = project.assets ? project.assets.reduce((acc, asset) => {
+    // Unique tags across the project, and the assets matching the active filter
+    const allTags = [...new Set((project.assets || []).flatMap((a) => a.tags || []))].sort();
+    const filteredAssets = activeTag
+        ? (project.assets || []).filter((a) => (a.tags || []).includes(activeTag))
+        : (project.assets || []);
+
+    // Group (filtered) assets by looks
+    const assetsByLook = filteredAssets.reduce((acc, asset) => {
         const look = project.looks?.find(l => l.id === asset.look_id)?.name || 'Non classé';
         if (!acc[look]) acc[look] = [];
         acc[look].push(asset);
         return acc;
-    }, {}) : {};
+    }, {});
 
     // Latest version url if any, else the asset preview
     const getAssetUrl = (asset) => {
@@ -68,9 +75,31 @@ export const ProductionView = ({ project, onOpenUpload }) => {
                 )}
             </div>
 
+            {/* Tag filter bar */}
+            {allTags.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 -mt-6">
+                    <span className="text-[11px] text-gray-500 uppercase tracking-widest mr-1">Filtrer</span>
+                    <button
+                        onClick={() => setActiveTag(null)}
+                        className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${!activeTag ? 'bg-white text-black border-white' : 'text-gray-400 border-white/15 hover:border-white/40 hover:text-white'}`}
+                    >
+                        Tous
+                    </button>
+                    {allTags.map((t) => (
+                        <button
+                            key={t}
+                            onClick={() => setActiveTag(activeTag === t ? null : t)}
+                            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${activeTag === t ? 'bg-mv-gold text-black border-mv-gold' : 'text-mv-gold/80 border-mv-gold/25 hover:border-mv-gold/60'}`}
+                        >
+                            #{t}
+                        </button>
+                    ))}
+                </div>
+            )}
+
             {Object.keys(assetsByLook).length === 0 && (
                 <div className="flex flex-col items-center justify-center py-20 border border-dashed border-white/10 rounded-xl bg-white/5">
-                    <p className="text-gray-500 mb-4">Aucune image dans ce projet.</p>
+                    <p className="text-gray-500 mb-4">{activeTag ? `Aucun visuel avec le tag #${activeTag}.` : 'Aucune image dans ce projet.'}</p>
                     <button
                         onClick={onOpenUpload}
                         className="flex items-center gap-2 px-6 py-3 bg-mv-gold hover:bg-white text-black font-medium rounded-full transition-colors"

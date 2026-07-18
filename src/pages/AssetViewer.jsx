@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
     ArrowLeft, CheckCircle, Clock, AlertCircle, Download, UploadCloud,
     MessageSquare, Info, Loader2, Send, X, Columns2, CornerDownRight,
-    ZoomIn, ZoomOut, Maximize2,
+    ZoomIn, ZoomOut, Maximize2, Plus,
 } from 'lucide-react';
 import { assetService } from '../services/assetService';
 import { annotationService } from '../services/annotationService';
@@ -46,6 +46,7 @@ const AssetViewer = () => {
     const isClient = currentUser?.role === 'client';
 
     const [asset, setAsset] = useState(null);
+    const [tagInput, setTagInput] = useState('');
     const [loading, setLoading] = useState(true);
     const [notFound, setNotFound] = useState(false);
 
@@ -228,6 +229,26 @@ const AssetViewer = () => {
             throw new Error(); // let popup know
         }
     };
+
+    const updateTags = async (nextTags) => {
+        const prev = asset.tags || [];
+        setAsset((a) => ({ ...a, tags: nextTags }));
+        try {
+            await assetService.updateAsset(id, { tags: nextTags });
+        } catch {
+            setAsset((a) => ({ ...a, tags: prev }));
+            toast.error('Impossible de mettre à jour les tags');
+        }
+    };
+    const addTag = () => {
+        const t = tagInput.trim().replace(/^#/, '');
+        if (!t) return;
+        const cur = asset.tags || [];
+        if (cur.some((x) => x.toLowerCase() === t.toLowerCase())) { setTagInput(''); return; }
+        updateTags([...cur, t]);
+        setTagInput('');
+    };
+    const removeTag = (t) => updateTags((asset.tags || []).filter((x) => x !== t));
 
     const handleResolve = async (annotationId) => {
         try {
@@ -675,6 +696,46 @@ const AssetViewer = () => {
                                         <dd className="text-white font-medium">{formatDate(asset.created_at)}</dd>
                                     </div>
                                 </dl>
+                            </section>
+
+                            {/* Tags */}
+                            <section>
+                                <h3 className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3">Tags</h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {(asset.tags || []).map((t) => (
+                                        <span key={t} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full bg-mv-gold/10 border border-mv-gold/25 text-mv-gold text-xs font-medium">
+                                            #{t}
+                                            {!isClient && (
+                                                <button onClick={() => removeTag(t)} aria-label={`Retirer ${t}`} className="w-4 h-4 rounded-full hover:bg-mv-gold/20 flex items-center justify-center transition-colors">
+                                                    <X size={11} />
+                                                </button>
+                                            )}
+                                        </span>
+                                    ))}
+                                    {(asset.tags || []).length === 0 && isClient && (
+                                        <span className="text-xs text-gray-600">Aucun tag</span>
+                                    )}
+                                </div>
+                                {!isClient && (
+                                    <div className="mt-3 flex items-center gap-2">
+                                        <input
+                                            type="text"
+                                            value={tagInput}
+                                            onChange={(e) => setTagInput(e.target.value)}
+                                            onKeyDown={(e) => { if (e.key === 'Enter') addTag(); }}
+                                            placeholder="Ajouter un tag (ex : Urgent)"
+                                            className="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-mv-gold/50"
+                                        />
+                                        <button
+                                            onClick={addTag}
+                                            disabled={!tagInput.trim()}
+                                            className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:border-white/30 transition-colors disabled:opacity-40"
+                                            aria-label="Ajouter le tag"
+                                        >
+                                            <Plus size={16} />
+                                        </button>
+                                    </div>
+                                )}
                             </section>
 
                             <section>
