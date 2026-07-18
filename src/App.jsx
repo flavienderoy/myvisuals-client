@@ -27,9 +27,10 @@ import ClientProjectDetail from './pages/client/ClientProjectDetail';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 // Wrapper for MainLayout to pass current path logic if needed
+// Studio workspace shell — clients are redirected to their portal (RBAC)
 const AppLayout = ({ children }) => {
   return (
-    <ProtectedRoute>
+    <ProtectedRoute studioOnly>
       <MainLayout>{children}</MainLayout>
     </ProtectedRoute>
   );
