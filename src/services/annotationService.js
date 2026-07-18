@@ -1,8 +1,11 @@
 import api from './api';
 
 export const annotationService = {
-    getAnnotations: async (assetId) => {
-        const { data } = await api.get('/annotations', { params: { assetId } });
+    getAnnotations: async (assetId, status) => {
+        const params = {};
+        if (assetId) params.assetId = assetId;
+        if (status) params.status = status;
+        const { data } = await api.get('/annotations', { params });
         return data;
     },
     createAnnotation: async (annotationData) => {
@@ -16,5 +19,19 @@ export const annotationService = {
     deleteAnnotation: async (id) => {
         const { data } = await api.delete(`/annotations/${id}`);
         return data;
-    }
+    },
+    resolveAnnotation: async (id) => {
+        const { data } = await api.patch(`/annotations/${id}/resolve`);
+        return data;
+    },
+    reopenAnnotation: async (id) => {
+        const { data } = await api.patch(`/annotations/${id}/reopen`);
+        return data;
+    },
+    getTickets: async (status) => {
+        const params = {};
+        if (status) params.status = status;
+        const { data } = await api.get('/annotations/tickets', { params });
+        return data;
+    },
 };

@@ -6,10 +6,12 @@ import {
 } from 'lucide-react';
 import { assetService } from '../services/assetService';
 import { annotationService } from '../services/annotationService';
+import { projectService } from '../services/projectService';
 import { useData } from '../context/DataContext';
 import { useToast } from '../hooks/useToast';
 import { openDownloadUrl } from '../utils/download';
 import { DiffComparator } from '../components/studio/DiffComparator';
+import AnnotationPopup from '../components/studio/AnnotationPopup';
 
 const STATUS_META = {
     approved: { label: 'Validé', icon: CheckCircle, classes: 'bg-green-500/10 text-green-400 border-green-500/30' },
@@ -51,9 +53,7 @@ const AssetViewer = () => {
     const [draft, setDraft] = useState(null); // {x, y}
     const [draftText, setDraftText] = useState('');
     const [posting, setPosting] = useState(false);
-    const [replyingTo, setReplyingTo] = useState(null); // parent annotation id
-    const [replyText, setReplyText] = useState('');
-    const [replyPosting, setReplyPosting] = useState(false);
+    const [projectMembers, setProjectMembers] = useState([]);
 
     // Split flat annotations into pinned threads (parent) + their replies
     const threads = useMemo(() => {
@@ -73,13 +73,18 @@ const AssetViewer = () => {
     const [busyAction, setBusyAction] = useState(null); // 'approve' | 'review' | 'download' | 'version'
 
     const canvasRef = useRef(null);
-    const composerRef = useRef(null);
 
     const loadAsset = useCallback(async () => {
         try {
             const data = await assetService.getAssetById(id);
             setAsset(data);
             setAnnotations(data.annotations || []);
+            
+            if (data.project_id) {
+                projectService.getProjectMembers(data.project_id)
+                    .then(setProjectMembers)
+                    .catch(() => {});
+            }
         } catch {
             setNotFound(true);
         } finally {
@@ -105,18 +110,19 @@ const AssetViewer = () => {
         setDraft({ x, y });
         setSelectedPin(null);
         setTab('comments');
-        setTimeout(() => composerRef.current?.focus(), 50);
     };
 
     const submitAnnotation = async () => {
         if (!draft || !draftText.trim() || posting) return;
         setPosting(true);
         try {
+            const mentions = projectMembers.filter(m => draftText.includes(`@${m.name}`)).map(m => m.id);
             const created = await annotationService.createAnnotation({
                 asset_id: id,
                 content: draftText.trim(),
                 x_position: draft.x,
                 y_position: draft.y,
+                mentions: mentions
             });
             setAnnotations((prev) => [...prev, created]);
             setDraft(null);
@@ -128,27 +134,52 @@ const AssetViewer = () => {
         }
     };
 
-    const submitReply = async (parentId) => {
-        if (!replyText.trim() || replyPosting) return;
-        setReplyPosting(true);
+    const handleReply = async (parentId, text) => {
         try {
+            const mentions = projectMembers.filter(m => text.includes(`@${m.name}`)).map(m => m.id);
             const created = await annotationService.createAnnotation({
                 asset_id: id,
-                content: replyText.trim(),
+                content: text,
                 parent_id: parentId,
+                mentions: mentions
             });
             setAnnotations((prev) => [...prev, created]);
-            setReplyText('');
-            setReplyingTo(null);
         } catch {
             toast.error("Impossible d'envoyer la réponse");
-        } finally {
-            setReplyPosting(false);
+            throw new Error(); // let popup know
         }
     };
 
+    const handleResolve = async (annotationId) => {
+        try {
+            const updated = await annotationService.resolveAnnotation(annotationId);
+            setAnnotations((prev) => prev.map(a => a.id === annotationId ? { ...a, ...updated } : a));
+            toast.success('Ticket résolu');
+        } catch {
+            toast.error('Impossible de résoudre le ticket');
+            throw new Error();
+        }
+    };
+
+    const handleReopen = async (annotationId) => {
+        try {
+            const updated = await annotationService.reopenAnnotation(annotationId);
+            setAnnotations((prev) => prev.map(a => a.id === annotationId ? { ...a, ...updated } : a));
+            toast.success('Ticket rouvert');
+        } catch {
+            toast.error('Impossible de rouvrir le ticket');
+            throw new Error();
+        }
+    };
+
+    const closePopup = () => {
+        setSelectedPin(null);
+        setDraft(null);
+        setDraftText('');
+    };
+
     useEffect(() => {
-        const onKey = (e) => { if (e.key === 'Escape') { setDraft(null); setDraftText(''); setReplyingTo(null); } };
+        const onKey = (e) => { if (e.key === 'Escape') closePopup(); };
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
     }, []);
@@ -194,6 +225,10 @@ const AssetViewer = () => {
         }
     };
 
+    // ----- Ticket stats -----
+    const openTickets = threads.filter(t => t.status !== 'resolved').length;
+    const resolvedTickets = threads.filter(t => t.status === 'resolved').length;
+
     // ----- Render -----
     if (loading) {
         return (
@@ -216,6 +251,10 @@ const AssetViewer = () => {
 
     const isApproved = asset.status === 'approved';
     const canDownload = !isClient || isApproved;
+
+    // Find the selected thread for the popup
+    const selectedThread = selectedPin ? threads.find(t => t.id === selectedPin) : null;
+    const selectedPinIndex = selectedThread ? threads.indexOf(selectedThread) + 1 : 0;
 
     return (
         <div className="h-dvh flex flex-col bg-[#0a0a0a] text-white overflow-hidden">
@@ -334,9 +373,23 @@ const AssetViewer = () => {
                             {threads.map((ann, i) => (
                                 <button
                                     key={ann.id || i}
-                                    onClick={(e) => { e.stopPropagation(); setSelectedPin(ann.id); setTab('comments'); }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedPin(selectedPin === ann.id ? null : ann.id);
+                                        setDraft(null);
+                                        setDraftText('');
+                                        setTab('comments');
+                                    }}
                                     aria-label={`Commentaire ${i + 1}`}
-                                    className={`absolute w-7 h-7 -ml-3.5 -mt-3.5 rounded-full border-2 flex items-center justify-center text-xs font-bold shadow-lg transition-transform ${selectedPin === ann.id ? 'bg-mv-gold text-black border-white scale-110' : 'bg-black/80 text-mv-gold border-mv-gold hover:scale-110'}`}
+                                    className={`absolute w-7 h-7 -ml-3.5 -mt-3.5 rounded-full border-2 flex items-center justify-center text-xs font-bold shadow-lg transition-all duration-200 ${
+                                        ann.status === 'resolved'
+                                            ? (selectedPin === ann.id
+                                                ? 'bg-green-500 text-white border-white scale-110'
+                                                : 'bg-green-500/80 text-white border-green-400/60 hover:scale-110 opacity-60 hover:opacity-100')
+                                            : (selectedPin === ann.id
+                                                ? 'bg-mv-gold text-black border-white scale-110'
+                                                : 'bg-black/80 text-mv-gold border-mv-gold hover:scale-110')
+                                    }`}
                                     style={{ left: `${ann.x ?? ann.x_position}%`, top: `${ann.y ?? ann.y_position}%` }}
                                 >
                                     {i + 1}
@@ -346,15 +399,48 @@ const AssetViewer = () => {
                             {/* Draft pin */}
                             {draft && (
                                 <div
-                                    className="absolute w-7 h-7 -ml-3.5 -mt-3.5 bg-mv-gold rounded-full border-2 border-white shadow-lg animate-pulse"
+                                    className="absolute w-7 h-7 -ml-3.5 -mt-3.5 bg-mv-gold rounded-full border-2 border-white shadow-lg animate-annotation-pulse"
                                     style={{ left: `${draft.x}%`, top: `${draft.y}%` }}
+                                />
+                            )}
+
+                            {/* ===== POPUP: New draft ===== */}
+                            {draft && (
+                                <AnnotationPopup
+                                    isNewDraft
+                                    anchorPosition={draft}
+                                    canvasRef={canvasRef}
+                                    draftText={draftText}
+                                    onDraftTextChange={setDraftText}
+                                    onSubmitDraft={submitAnnotation}
+                                    draftPosting={posting}
+                                    projectMembers={projectMembers}
+                                    onClose={() => { setDraft(null); setDraftText(''); }}
+                                />
+                            )}
+
+                            {/* ===== POPUP: Selected thread ===== */}
+                            {selectedThread && !draft && (
+                                <AnnotationPopup
+                                    thread={selectedThread}
+                                    pinIndex={selectedPinIndex}
+                                    anchorPosition={{
+                                        x: selectedThread.x ?? selectedThread.x_position,
+                                        y: selectedThread.y ?? selectedThread.y_position,
+                                    }}
+                                    canvasRef={canvasRef}
+                                    onReply={handleReply}
+                                    onResolve={handleResolve}
+                                    onReopen={handleReopen}
+                                    onClose={() => setSelectedPin(null)}
+                                    projectMembers={projectMembers}
                                 />
                             )}
                         </div>
                     )}
 
                     {/* Hint */}
-                    {!comparing && (
+                    {!comparing && !draft && !selectedPin && (
                         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-black/70 border border-white/10 text-[11px] text-gray-400 pointer-events-none">
                             Cliquez sur l'image pour ajouter un commentaire
                         </div>
@@ -384,40 +470,23 @@ const AssetViewer = () => {
 
                     {tab === 'comments' ? (
                         <div className="flex-1 flex flex-col min-h-0">
-                            {/* Composer (visible when a draft pin is placed) */}
-                            {draft && (
-                                <div className="p-4 border-b border-white/10 bg-mv-gold/5 shrink-0">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="text-[11px] font-bold text-mv-gold uppercase tracking-widest">Nouveau commentaire</span>
-                                        <button onClick={() => { setDraft(null); setDraftText(''); }} aria-label="Annuler" className="text-gray-500 hover:text-white">
-                                            <X size={14} />
-                                        </button>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <input
-                                            ref={composerRef}
-                                            type="text"
-                                            value={draftText}
-                                            onChange={(e) => setDraftText(e.target.value)}
-                                            onKeyDown={(e) => { if (e.key === 'Enter') submitAnnotation(); }}
-                                            placeholder="Décrivez votre retour…"
-                                            className="flex-1 bg-black/40 border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-mv-gold/60"
-                                        />
-                                        <button
-                                            onClick={submitAnnotation}
-                                            disabled={!draftText.trim() || posting}
-                                            aria-label="Envoyer"
-                                            className="px-3 rounded-lg bg-mv-gold text-black disabled:opacity-40 hover:bg-white transition-colors"
-                                        >
-                                            {posting ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
-                                        </button>
-                                    </div>
+                            {/* Ticket stats bar */}
+                            {threads.length > 0 && (
+                                <div className="px-4 py-3 border-b border-white/10 flex items-center gap-3 shrink-0">
+                                    <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
+                                        <span className="w-2 h-2 rounded-full bg-mv-gold"></span>
+                                        {openTickets} ouvert{openTickets !== 1 ? 's' : ''}
+                                    </span>
+                                    <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
+                                        <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                                        {resolvedTickets} résolu{resolvedTickets !== 1 ? 's' : ''}
+                                    </span>
                                 </div>
                             )}
 
-                            {/* List of threads */}
-                            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                                {threads.length === 0 && !draft ? (
+                            {/* List of threads (simplified — click opens popup) */}
+                            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                                {threads.length === 0 ? (
                                     <div className="text-center pt-16 px-6">
                                         <MessageSquare size={28} className="mx-auto text-gray-700 mb-3" />
                                         <p className="text-sm text-gray-500">Aucun commentaire pour l'instant.</p>
@@ -425,71 +494,45 @@ const AssetViewer = () => {
                                     </div>
                                 ) : (
                                     threads.map((ann, i) => (
-                                        <div
+                                        <button
                                             key={ann.id || i}
-                                            onClick={() => setSelectedPin(ann.id)}
-                                            className={`rounded-xl border transition-colors cursor-pointer ${selectedPin === ann.id ? 'border-mv-gold/60 bg-mv-gold/5' : 'border-white/10 bg-white/[0.03] hover:border-white/25'}`}
+                                            onClick={() => {
+                                                setSelectedPin(ann.id);
+                                                setDraft(null);
+                                                setDraftText('');
+                                            }}
+                                            className={`w-full text-left rounded-xl border transition-all p-3 group ${
+                                                selectedPin === ann.id
+                                                    ? 'border-mv-gold/60 bg-mv-gold/5'
+                                                    : 'border-white/10 bg-white/[0.03] hover:border-white/25 hover:bg-white/[0.05]'
+                                            }`}
                                         >
-                                            {/* Root comment */}
-                                            <div className="p-3">
-                                                <div className="flex items-center gap-2 mb-1.5">
-                                                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${selectedPin === ann.id ? 'bg-mv-gold text-black' : 'bg-white/10 text-mv-gold'}`}>
-                                                        {i + 1}
-                                                    </span>
-                                                    <span className="text-xs font-bold text-white truncate">{ann.author?.name || 'Utilisateur'}</span>
-                                                    <span className="text-[10px] text-gray-600 ml-auto shrink-0">{formatDate(ann.created_at)}</span>
-                                                </div>
-                                                <p className="text-sm text-gray-300 leading-relaxed pl-7">{ann.content}</p>
+                                            <div className="flex items-center gap-2 mb-1.5">
+                                                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 transition-colors ${
+                                                    ann.status === 'resolved'
+                                                        ? 'bg-green-500 text-white'
+                                                        : (selectedPin === ann.id ? 'bg-mv-gold text-black' : 'bg-white/10 text-mv-gold')
+                                                }`}>
+                                                    {i + 1}
+                                                </span>
+                                                <span className="text-xs font-bold text-white truncate">{ann.author?.name || 'Utilisateur'}</span>
+                                                {/* Status indicator */}
+                                                <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full border ml-auto shrink-0 ${
+                                                    ann.status === 'resolved'
+                                                        ? 'bg-green-500/10 text-green-400 border-green-500/20'
+                                                        : 'bg-mv-gold/10 text-mv-gold border-mv-gold/20'
+                                                }`}>
+                                                    {ann.status === 'resolved' ? 'Résolu' : 'Ouvert'}
+                                                </span>
                                             </div>
-
-                                            {/* Replies */}
-                                            {ann.replies.length > 0 && (
-                                                <div className="pl-7 pr-3 pb-2 space-y-2 border-l border-white/10 ml-5">
-                                                    {ann.replies.map((rep) => (
-                                                        <div key={rep.id} className="pl-3">
-                                                            <div className="flex items-center gap-2 mb-0.5">
-                                                                <CornerDownRight size={11} className="text-gray-600 shrink-0" />
-                                                                <span className="text-[11px] font-bold text-gray-300 truncate">{rep.author?.name || 'Utilisateur'}</span>
-                                                                <span className="text-[10px] text-gray-600 ml-auto shrink-0">{formatDate(rep.created_at)}</span>
-                                                            </div>
-                                                            <p className="text-sm text-gray-400 leading-relaxed pl-[19px]">{rep.content}</p>
-                                                        </div>
-                                                    ))}
+                                            <p className="text-sm text-gray-400 leading-relaxed pl-7 line-clamp-2">{ann.content}</p>
+                                            {ann.replies && ann.replies.length > 0 && (
+                                                <div className="flex items-center gap-1.5 pl-7 mt-2 text-[10px] text-gray-600">
+                                                    <CornerDownRight size={10} />
+                                                    {ann.replies.length} réponse{ann.replies.length > 1 ? 's' : ''}
                                                 </div>
                                             )}
-
-                                            {/* Reply affordance / composer */}
-                                            <div className="px-3 pb-3 pl-10" onClick={(e) => e.stopPropagation()}>
-                                                {replyingTo === ann.id ? (
-                                                    <div className="flex gap-2">
-                                                        <input
-                                                            type="text"
-                                                            autoFocus
-                                                            value={replyText}
-                                                            onChange={(e) => setReplyText(e.target.value)}
-                                                            onKeyDown={(e) => { if (e.key === 'Enter') submitReply(ann.id); }}
-                                                            placeholder="Répondre…"
-                                                            className="flex-1 bg-black/40 border border-white/15 rounded-lg px-3 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-mv-gold/60"
-                                                        />
-                                                        <button
-                                                            onClick={() => submitReply(ann.id)}
-                                                            disabled={!replyText.trim() || replyPosting}
-                                                            aria-label="Envoyer la réponse"
-                                                            className="px-2.5 rounded-lg bg-mv-gold text-black disabled:opacity-40 hover:bg-white transition-colors"
-                                                        >
-                                                            {replyPosting ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => { setReplyingTo(ann.id); setReplyText(''); setSelectedPin(ann.id); }}
-                                                        className="text-[11px] font-medium text-gray-500 hover:text-mv-gold transition-colors flex items-center gap-1.5"
-                                                    >
-                                                        <CornerDownRight size={12} /> Répondre
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
+                                        </button>
                                     ))
                                 )}
                             </div>

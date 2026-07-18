@@ -11,10 +11,12 @@ import Messages from './pages/Messages';
 import SignIn from './pages/auth/SignIn';
 import SignUp from './pages/auth/SignUp';
 import Profile from './pages/profile/Profile';
+import { TeamSettings } from './pages/dashboard/TeamSettings';
 import { Loader } from './components/common/Loader';
 import { DataProvider } from './context/DataContext';
 import { AuthProvider } from './context/AuthContext';
 import LandingPage from './pages/LandingPage';
+import TicketsPage from './pages/TicketsPage';
 
 // Client Portal Pages
 import ClientDashboard from './pages/client/ClientDashboard';
@@ -72,6 +74,12 @@ function App() {
               </AppLayout>
             } />
 
+            <Route path="/studio/team" element={
+              <AppLayout>
+                <TeamSettings />
+              </AppLayout>
+            } />
+
             <Route path="/showroom/:id" element={
               <ShowroomLayout>
                 <Showroom />
@@ -83,6 +91,12 @@ function App() {
               <ProtectedRoute redirectTo="/login">
                 <AssetViewer />
               </ProtectedRoute>
+            } />
+
+            <Route path="/tickets" element={
+              <AppLayout>
+                <TicketsPage />
+              </AppLayout>
             } />
 
             <Route path="/messages" element={
