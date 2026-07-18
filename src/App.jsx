@@ -17,6 +17,7 @@ import { DataProvider } from './context/DataContext';
 import { AuthProvider } from './context/AuthContext';
 import LandingPage from './pages/LandingPage';
 import TicketsPage from './pages/TicketsPage';
+import SharePage from './pages/SharePage';
 
 // Client Portal Pages
 import ClientDashboard from './pages/client/ClientDashboard';
@@ -65,6 +66,9 @@ function App() {
               <Route path="messages" element={<ClientMessages />} />
               <Route path="projects/:id" element={<ClientProjectDetail />} />
             </Route>
+
+            {/* Public read-only share link (no auth) */}
+            <Route path="/share/:token" element={<SharePage />} />
 
             {/* Landing Page */}
             <Route path="/" element={<LandingPage />} />

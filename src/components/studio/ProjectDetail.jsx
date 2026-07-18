@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Grid, Package, CheckCircle, Plus, ShieldCheck, Clock, Monitor, Settings, Download, Loader2 } from 'lucide-react';
+import { ArrowLeft, Grid, Package, CheckCircle, Plus, ShieldCheck, Clock, Monitor, Settings, Download, Loader2, Share2 } from 'lucide-react';
 import { LuxuryTitle } from '../common/LuxuryTitle';
 import { ProductionView } from './StudioViews';
 import { PageTransition } from '../common/PageTransition';
 import { Modal } from '../common/Modal';
 import { EditProjectModal } from './modals/EditProjectModal';
+import { ShareModal } from './modals/ShareModal';
 import { ImageUploader } from '../common/ImageUploader';
 import { AuditTrail } from './AuditTrail';
 import { assetService } from '../../services/assetService';
@@ -15,6 +16,7 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
     const [activeTab, setActiveTab] = useState('production');
     const [isUploadOpen, setIsUploadOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
+    const [isShareOpen, setIsShareOpen] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
     const toast = useToast();
 
@@ -89,11 +91,20 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
 
                             <button
                                 onClick={() => window.open(`/showroom/${project.id}`, '_blank')}
-                                className="flex items-center gap-2 px-4 py-2 bg-transparent text-white border border-white/20 rounded-full hover:border-mv-gold hover:text-mv-gold transition-all text-sm font-medium"
+                                className="w-10 h-10 flex items-center justify-center rounded-full border border-white/10 text-gray-400 hover:text-white hover:border-mv-gold hover:bg-white/5 transition-colors"
                                 title="Ouvrir le Showroom de livraison"
+                                aria-label="Showroom"
                             >
-                                <Monitor size={16} />
-                                <span className="hidden md:inline">Showroom</span>
+                                <Monitor size={18} />
+                            </button>
+
+                            <button
+                                onClick={() => setIsShareOpen(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-transparent text-white border border-white/20 rounded-full hover:border-mv-gold hover:text-mv-gold transition-all text-sm font-medium"
+                                title="Partager le projet en lecture seule"
+                            >
+                                <Share2 size={16} />
+                                <span className="hidden md:inline">Partager</span>
                             </button>
 
                             <button
@@ -237,6 +248,12 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
                 isOpen={isEditOpen}
                 onClose={() => setIsEditOpen(false)}
                 project={project}
+            />
+
+            <ShareModal
+                isOpen={isShareOpen}
+                onClose={() => setIsShareOpen(false)}
+                projectId={project.id}
             />
         </PageTransition>
     );

@@ -28,5 +28,19 @@ export const projectService = {
   getStats: async () => {
     const { data } = await api.get('/projects/stats');
     return data;
+  },
+  // Public share links
+  enableShare: async (id) => {
+    const { data } = await api.post(`/projects/${id}/share`);
+    return data;
+  },
+  disableShare: async (id) => {
+    const { data } = await api.delete(`/projects/${id}/share`);
+    return data;
+  },
+  // No-auth: fetch a shared project by its public token
+  getSharedProject: async (token) => {
+    const { data } = await api.get(`/public/share/${token}`);
+    return data;
   }
 };
