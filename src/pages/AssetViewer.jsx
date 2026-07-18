@@ -154,7 +154,11 @@ const AssetViewer = () => {
     }, [comparing, zoomBy]);
 
     const onPointerDown = (e) => {
-        panRef.current = { sx: e.clientX, sy: e.clientY, ox: offset.x, oy: offset.y, moved: false, annotatable: e.target.tagName === 'IMG' };
+        // Annotatable when the press lands on the image area (the img is
+        // pointer-events-none, so the target is the canvas div itself) — but
+        // NOT on a pin/button.
+        const annotatable = e.target === canvasRef.current || e.target.tagName === 'IMG';
+        panRef.current = { sx: e.clientX, sy: e.clientY, ox: offset.x, oy: offset.y, moved: false, annotatable };
     };
     const onPointerMove = (e) => {
         const p = panRef.current;
