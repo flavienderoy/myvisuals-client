@@ -8,7 +8,9 @@ import {
     MessageSquare,
     Monitor,
     Folder,
-    Menu
+    Menu,
+    Ticket,
+    Users
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { NotificationCenter } from '../common/NotificationCenter';
@@ -135,6 +137,16 @@ export const Sidebar = () => {
                         <NavLink to="/messages" className={({ isActive }) => `w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all mt-1 ${isActive ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
                             <MessageSquare size={18} />
                             {!collapsed && <span className="text-sm font-medium">Messagerie</span>}
+                        </NavLink>
+
+                        <NavLink to="/tickets" className={({ isActive }) => `w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all mt-1 ${isActive ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+                            <Ticket size={18} />
+                            {!collapsed && <span className="text-sm font-medium">Tickets</span>}
+                        </NavLink>
+
+                        <NavLink to="/studio/team" className={({ isActive }) => `w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all mt-1 ${isActive ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+                            <Users size={18} />
+                            {!collapsed && <span className="text-sm font-medium">Équipe</span>}
                         </NavLink>
                     </div>
 
