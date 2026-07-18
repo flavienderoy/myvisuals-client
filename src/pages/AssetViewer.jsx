@@ -419,7 +419,12 @@ const AssetViewer = () => {
                 >
                     {comparing && firstVersionUrl ? (
                         <div className="w-full max-w-5xl">
-                            <DiffComparator beforeImage={firstVersionUrl} afterImage={displayUrl} />
+                            <DiffComparator
+                                beforeImage={firstVersionUrl}
+                                afterImage={displayUrl}
+                                beforeLabel={`V${sortedVersions[0]?.version_number ?? 1}`}
+                                afterLabel={`V${latestVersion?.version_number ?? sortedVersions.length}`}
+                            />
                         </div>
                     ) : (
                         <div
