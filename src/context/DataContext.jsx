@@ -8,7 +8,6 @@ import { moodBoardService } from '../services/moodBoardService';
 import { activityService } from '../services/activityService';
 import { assetService } from '../services/assetService';
 import { notificationService } from '../services/notificationService';
-import { messageService } from '../services/messageService';
 import { profileService } from '../services/profileService';
 import { smartFolderService } from '../services/smartFolderService';
 import { watermarkService } from '../services/watermarkService';
@@ -51,7 +50,6 @@ export const DataProvider = ({ children }) => {
     const [tasks, setTasks] = useState([]);
     const [timeEntries, setTimeEntries] = useState([]);
     const [notifications, setNotifications] = useState([]);
-    const [messages, setMessages] = useState([]);
     const [smartFolders, setSmartFolders] = useState([]);
     const [permissions, setPermissions] = useState([]);
     const [auditLogs, setAuditLogs] = useState([]);
@@ -84,17 +82,9 @@ export const DataProvider = ({ children }) => {
           })
           .subscribe();
 
-        const messageSub = supabase
-          .channel('public:messages')
-          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-            setMessages(prev => [payload.new, ...prev]);
-          })
-          .subscribe();
-
         return () => {
             supabase.removeChannel(activitySub);
             supabase.removeChannel(notificationSub);
-            supabase.removeChannel(messageSub);
         };
     }, [user]);
 
@@ -146,20 +136,15 @@ export const DataProvider = ({ children }) => {
                 if (settingsInfo) setWatermarkSettings(settingsInfo);
             } catch(e) { }
 
-            // Fetch activities and messages for all fetched projects
+            // Fetch activities for all fetched projects (messaging is loaded
+            // per-conversation by the chat, not eagerly here)
             try {
                 const activitiesPromises = (fetchedProjects || []).map(p => activityService.getActivities(p.id).catch(() => []));
-                const messagesPromises = (fetchedProjects || []).map(p => messageService.getMessages(p.id).catch(() => []));
-                const [allActivitiesArrays, allMessagesArrays] = await Promise.all([
-                    Promise.all(activitiesPromises),
-                    Promise.all(messagesPromises)
-                ]);
+                const allActivitiesArrays = await Promise.all(activitiesPromises);
                 setActivities(allActivitiesArrays.flat());
-                setMessages(allMessagesArrays.flat());
             } catch (err) {
-                console.warn("Could not fetch activities/messages", err);
+                console.warn("Could not fetch activities", err);
                 setActivities([]);
-                setMessages([]);
             }
 
             // Fetch assets for every project (so studio & client see them on load)
@@ -367,8 +352,6 @@ export const DataProvider = ({ children }) => {
     const value = {
         notifications,
         setNotifications,
-        messages,
-        setMessages,
         currentUser: currentUser || { name: 'Invité' },
         projects,
         clients,
