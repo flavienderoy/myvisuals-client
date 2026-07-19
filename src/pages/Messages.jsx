@@ -1,14 +1,14 @@
 import React from 'react';
 import { LuxuryTitle } from '../components/common/LuxuryTitle';
-import { ProjectMessenger } from '../components/common/ProjectMessenger';
+import { ChatView } from '../components/common/ChatView';
 
 const Messages = () => (
-    <div className="max-w-7xl mx-auto px-8 py-10 space-y-8 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-8 py-10 space-y-6 animate-fade-in">
         <div>
-            <LuxuryTitle text="Messagerie" size="text-4xl" className="text-white mb-3" />
-            <p className="text-gray-400 text-lg">Échangez avec vos clients, projet par projet.</p>
+            <LuxuryTitle text="Messagerie" size="text-4xl" className="text-white mb-2" />
+            <p className="text-gray-400 text-lg">Canaux de projet, groupes et messages directs.</p>
         </div>
-        <ProjectMessenger />
+        <ChatView />
     </div>
 );
 
