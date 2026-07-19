@@ -39,17 +39,10 @@ const ActivityItem = ({ activity }) => {
 
             <div className="flex-1 min-w-0">
                 <p className="text-sm text-gray-300 leading-relaxed">
-                    {activity.message}
+                    <span className="font-semibold text-white">{activity.actor?.name || 'Quelqu\'un'}</span>{' '}
+                    {activity.description}
                 </p>
-                <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-gray-500">{timeAgo(activity.timestamp)}</span>
-                    {activity.projectId && (
-                        <span className="text-xs text-gray-600">•</span>
-                    )}
-                    {activity.projectId && (
-                        <span className="text-xs text-gray-600">Projet</span>
-                    )}
-                </div>
+                <span className="text-xs text-gray-500">{timeAgo(activity.created_at)}</span>
             </div>
         </div>
     );

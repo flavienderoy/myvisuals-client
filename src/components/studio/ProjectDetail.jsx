@@ -230,7 +230,7 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
                         </div>
 
                         {/* Audit trail — studio only */}
-                        {!isClient && <AuditTrail />}
+                        {!isClient && <AuditTrail projectId={project.id} />}
                     </div>
                 )}
             </div>
