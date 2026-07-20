@@ -1,12 +1,14 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { LuxuryTitle } from '../common/LuxuryTitle';
-import { Search, Plus, FolderOpen, Clock, AlertCircle, Users } from 'lucide-react';
+import { Search, Plus, FolderOpen, Clock, AlertCircle, Users, FolderHeart } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { ProjectCard, ProjectSlider } from './ProjectSlider';
 import { FilterMenu } from './FilterMenu';
 import { AddClientModal } from './modals/AddClientModal';
 import { AddProjectModal } from './modals/AddProjectModal';
 import { ActivityFeed } from './ActivityFeed';
+import { SmartFolderList } from './SmartFolderList';
+import { AddSmartFolderModal } from './modals/AddSmartFolderModal';
 
 
 export const Dashboard = () => {
@@ -19,12 +21,21 @@ export const Dashboard = () => {
 
     const [isClientModalOpen, setIsClientModalOpen] = useState(false);
     const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+    const [isSmartFolderModalOpen, setIsSmartFolderModalOpen] = useState(false);
     const [selectedClientForProject, setSelectedClientForProject] = useState("");
 
     const openProjectModal = useCallback((clientName = "") => {
         setSelectedClientForProject(clientName);
         setIsProjectModalOpen(true);
     }, []);
+
+    const handleApplySmartFolder = (filters) => {
+        setSearchQuery(filters.search || "");
+        setActiveFilters({
+            status: filters.status || [],
+            client: filters.client || []
+        });
+    };
 
     // Real operational counters (no mock revenue)
     const stats = useMemo(() => {
@@ -120,6 +131,14 @@ export const Dashboard = () => {
                         onFilterChange={setActiveFilters}
                     />
 
+                    <button
+                        onClick={() => setIsSmartFolderModalOpen(true)}
+                        className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-mv-gold transition-colors"
+                        title="Sauvegarder ces filtres (Smart Folder)"
+                    >
+                        <FolderHeart size={18} />
+                    </button>
+
                     {/* Search Bar */}
                     <div className="relative w-full md:w-72">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
@@ -133,6 +152,8 @@ export const Dashboard = () => {
                     </div>
                 </div>
             </div>
+
+            <SmartFolderList onApplyFolder={handleApplySmartFolder} />
 
             {/* Operational counters — real data, no vanity metrics */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -265,7 +286,12 @@ export const Dashboard = () => {
                 isOpen={isClientModalOpen}
                 onClose={() => setIsClientModalOpen(false)}
             />
-
+            <AddSmartFolderModal 
+                isOpen={isSmartFolderModalOpen}
+                onClose={() => setIsSmartFolderModalOpen(false)}
+                currentFilters={activeFilters}
+                currentSearch={searchQuery}
+            />
             <AddProjectModal
                 isOpen={isProjectModalOpen}
                 onClose={() => setIsProjectModalOpen(false)}
