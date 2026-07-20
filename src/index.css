@@ -92,6 +92,14 @@
     50% { transform: scale(1.15); }
     100% { transform: scale(1); opacity: 1; }
   }
+
+  @keyframes message-glow {
+    0% { background-color: rgba(212, 175, 55, 0.15); }
+    25% { background-color: rgba(212, 175, 55, 0.25); }
+    50% { background-color: rgba(212, 175, 55, 0.15); }
+    75% { background-color: rgba(212, 175, 55, 0.25); }
+    100% { background-color: transparent; }
+  }
 }
 
 /* Custom Base Styles */
@@ -124,6 +132,41 @@ textarea,
 button,
 [role="button"] {
   cursor: pointer;
+}
+
+/* Global micro-interactions & accessible focus (applies app-wide) */
+a,
+button,
+[role="button"] {
+  transition: transform 0.12s ease, opacity 0.15s ease, background-color 0.15s ease,
+    border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+button:not(:disabled):active,
+[role="button"]:active {
+  transform: scale(0.97);
+}
+
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-mv-black), 0 0 0 4px rgba(212, 175, 55, 0.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  a,
+  button,
+  [role="button"] {
+    transition: none !important;
+  }
+  button:active,
+  [role="button"]:active {
+    transform: none !important;
+  }
 }
 
 ::selection {
