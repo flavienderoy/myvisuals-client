@@ -21,7 +21,7 @@ const timeAgo = (iso) => {
 };
 
 export const AuditTrail = ({ projectId }) => {
-    const { activities } = useData();
+    const { activities, projects } = useData();
 
     const logs = (activities || [])
         .filter((a) => !projectId || a.project_id === projectId)
@@ -50,6 +50,11 @@ export const AuditTrail = ({ projectId }) => {
                                         <span className="text-mv-gold font-medium">{log.actor?.name || 'Quelqu\'un'}</span>{' '}
                                         <span className="text-gray-400">{log.description}</span>
                                     </p>
+                                    {!projectId && (
+                                        <p className="text-xs text-gray-500 mt-0.5">
+                                            sur <span className="text-gray-300 font-medium">{projects?.find(p => p.id === log.project_id)?.name || 'Projet inconnu'}</span>
+                                        </p>
+                                    )}
                                     <div className="flex items-center gap-1.5 mt-1 text-xs text-gray-600">
                                         {ICONS[log.type] || <FileText size={13} className="text-gray-500" />}
                                         <span className="uppercase tracking-wider">{(log.type || '').replace('_', ' ')}</span>

@@ -88,8 +88,14 @@ export const DataProvider = ({ children }) => {
         };
     }, [user]);
 
+    // Deduplicate concurrent loadCoreData calls (React StrictMode, auth state bouncing, etc.)
+    const loadCoreDataRef = React.useRef(null);
+
     // Load Real API Data
     const loadCoreData = useCallback(async () => {
+        // If already in-flight, reuse the same promise
+        if (loadCoreDataRef.current) return loadCoreDataRef.current;
+
         if (!user) {
             setProjects([]);
             setClients([]);
@@ -98,6 +104,7 @@ export const DataProvider = ({ children }) => {
             return;
         }
 
+        const promise = (async () => {
         try {
             setLoadingData(true);
             const [
@@ -214,7 +221,12 @@ export const DataProvider = ({ children }) => {
             toast.error("Erreur de connexion au serveur");
         } finally {
             setLoadingData(false);
+            loadCoreDataRef.current = null;
         }
+        })();
+
+        loadCoreDataRef.current = promise;
+        return promise;
     }, [user]);
 
     // Re-fetch when user changes

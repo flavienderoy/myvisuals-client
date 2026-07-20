@@ -104,6 +104,12 @@ function App() {
               </AppLayout>
             } />
 
+            <Route path="/team" element={
+              <AppLayout>
+                <TeamSettings />
+              </AppLayout>
+            } />
+
             <Route path="/messages" element={
               <AppLayout>
                 <Messages />

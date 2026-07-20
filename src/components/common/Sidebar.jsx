@@ -143,8 +143,8 @@ export const Sidebar = () => {
                             <Ticket size={18} />
                             {!collapsed && <span className="text-sm font-medium">Tickets</span>}
                         </NavLink>
-
-                        <NavLink to="/studio/team" className={({ isActive }) => `w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all mt-1 ${isActive ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+                        
+                        <NavLink to="/team" className={({ isActive }) => `w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all mt-1 ${isActive ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
                             <Users size={18} />
                             {!collapsed && <span className="text-sm font-medium">Équipe</span>}
                         </NavLink>

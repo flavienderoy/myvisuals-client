@@ -22,12 +22,21 @@ api.interceptors.request.use(
     }
 );
 
-// Optional: Response interceptor for handling common errors (like 401)
+// Optional: Response interceptor for handling common errors (like 401) and retrying 429s
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
+        const config = error.config;
+        if (error.response?.status === 429 && config && !config.__retryCount) {
+            config.__retryCount = 0;
+        }
+        if (error.response?.status === 429 && config && config.__retryCount < 3) {
+            config.__retryCount += 1;
+            const delay = Math.pow(2, config.__retryCount - 1) * 1000; // 1s, 2s, 4s
+            await new Promise((r) => setTimeout(r, delay));
+            return api(config);
+        }
         if (error.response?.status === 401) {
-            // Handle token expiration or invalidity (optional: redirect to login)
             console.warn('Unauthorized request. Token might be expired.');
         }
         return Promise.reject(error);
