@@ -42,7 +42,7 @@ const AssetViewer = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const toast = useToast();
-    const { currentUser, patchAsset } = useData();
+    const { currentUser, patchAsset, createTask } = useData();
     const isClient = currentUser?.role === 'client';
 
     const [asset, setAsset] = useState(null);
@@ -91,6 +91,13 @@ const AssetViewer = () => {
             replies: (repliesByParent[r.id] || []).sort((a, b) => new Date(a.created_at) - new Date(b.created_at)),
         }));
     }, [annotations, currentVersionId]);
+
+    // Resolved threads are hidden (image + panel) unless explicitly shown
+    const [showResolved, setShowResolved] = useState(false);
+    const visibleThreads = useMemo(
+        () => (showResolved ? threads : threads.filter((t) => t.status !== 'resolved')),
+        [threads, showResolved]
+    );
 
     const [tab, setTab] = useState('comments'); // comments | details
     const [comparing, setComparing] = useState(false);
@@ -352,9 +359,21 @@ const AssetViewer = () => {
     const isApproved = asset.status === 'approved';
     const canDownload = !isClient || isApproved;
 
-    // Find the selected thread for the popup
-    const selectedThread = selectedPin ? threads.find(t => t.id === selectedPin) : null;
-    const selectedPinIndex = selectedThread ? threads.indexOf(selectedThread) + 1 : 0;
+    // Find the selected thread for the popup (only among the visible ones)
+    const selectedThread = selectedPin ? visibleThreads.find(t => t.id === selectedPin) : null;
+    const selectedPinIndex = selectedThread ? visibleThreads.indexOf(selectedThread) + 1 : 0;
+
+    const handleCreateTask = async (thread) => {
+        if (!asset?.project_id) return;
+        const label = (thread?.content || 'Retouche demandée').replace(/\s+/g, ' ').trim();
+        await createTask({
+            project_id: asset.project_id,
+            title: label.length > 80 ? `${label.slice(0, 79)}…` : label,
+            description: `Depuis un retour sur « ${asset.name} »`,
+            status: 'todo',
+        });
+        toast.success('Tâche ajoutée au tableau');
+    };
 
     return (
         <div className="h-dvh flex flex-col bg-[#0a0a0a] text-white overflow-hidden">
@@ -481,7 +500,7 @@ const AssetViewer = () => {
                             />
 
                             {/* Pins (top-level threads only) */}
-                            {threads.map((ann, i) => (
+                            {visibleThreads.map((ann, i) => (
                                 <button
                                     key={ann.id || i}
                                     onClick={(e) => {
@@ -548,6 +567,7 @@ const AssetViewer = () => {
                             onReply={handleReply}
                             onResolve={handleResolve}
                             onReopen={handleReopen}
+                            onCreateTask={isClient ? undefined : handleCreateTask}
                             onClose={() => setSelectedPin(null)}
                             projectMembers={projectMembers}
                         />
@@ -590,8 +610,8 @@ const AssetViewer = () => {
                             className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-xs font-bold uppercase tracking-widest transition-colors ${tab === 'comments' ? 'text-mv-gold border-b-2 border-mv-gold' : 'text-gray-500 hover:text-white'}`}
                         >
                             <MessageSquare size={14} /> Commentaires
-                            {threads.length > 0 && (
-                                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-white/10 text-[10px] text-white">{threads.length}</span>
+                            {visibleThreads.length > 0 && (
+                                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-white/10 text-[10px] text-white">{visibleThreads.length}</span>
                             )}
                         </button>
                         <button
@@ -604,30 +624,36 @@ const AssetViewer = () => {
 
                     {tab === 'comments' ? (
                         <div className="flex-1 flex flex-col min-h-0">
-                            {/* Ticket stats bar */}
+                            {/* Ticket stats bar + resolved toggle */}
                             {threads.length > 0 && (
                                 <div className="px-4 py-3 border-b border-white/10 flex items-center gap-3 shrink-0">
                                     <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
                                         <span className="w-2 h-2 rounded-full bg-mv-gold"></span>
                                         {openTickets} ouvert{openTickets !== 1 ? 's' : ''}
                                     </span>
-                                    <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
-                                        <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                                        {resolvedTickets} résolu{resolvedTickets !== 1 ? 's' : ''}
-                                    </span>
+                                    {resolvedTickets > 0 && (
+                                        <button
+                                            onClick={() => setShowResolved((v) => !v)}
+                                            className={`flex items-center gap-1.5 text-[11px] transition-colors ${showResolved ? 'text-green-400' : 'text-gray-500 hover:text-gray-300'}`}
+                                            title={showResolved ? 'Masquer les résolus' : 'Afficher les résolus'}
+                                        >
+                                            <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                                            {resolvedTickets} résolu{resolvedTickets !== 1 ? 's' : ''} · {showResolved ? 'masquer' : 'afficher'}
+                                        </button>
+                                    )}
                                 </div>
                             )}
 
                             {/* List of threads (simplified — click opens popup) */}
                             <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                                {threads.length === 0 ? (
+                                {visibleThreads.length === 0 ? (
                                     <div className="text-center pt-16 px-6">
                                         <MessageSquare size={28} className="mx-auto text-gray-700 mb-3" />
                                         <p className="text-sm text-gray-500">Aucun commentaire pour l'instant.</p>
                                         <p className="text-xs text-gray-600 mt-1">Cliquez sur l'image pour épingler un retour précis.</p>
                                     </div>
                                 ) : (
-                                    threads.map((ann, i) => (
+                                    visibleThreads.map((ann, i) => (
                                         <button
                                             key={ann.id || i}
                                             onClick={() => {

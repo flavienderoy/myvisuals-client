@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
     X, Send, CheckCircle, RotateCcw, CornerDownRight,
-    Loader2, MessageSquare, Clock,
+    Loader2, MessageSquare, Clock, ListPlus,
 } from 'lucide-react';
 
 const formatDate = (iso) => {
@@ -37,6 +37,7 @@ const AnnotationPopup = ({
     onReply,
     onResolve,
     onReopen,
+    onCreateTask,
     onClose,
     isNewDraft = false,
     draftText = '',
@@ -52,6 +53,8 @@ const AnnotationPopup = ({
     const [replyPosting, setReplyPosting] = useState(false);
     const [showReplyInput, setShowReplyInput] = useState(false);
     const [resolving, setResolving] = useState(false);
+    const [taskBusy, setTaskBusy] = useState(false);
+    const [taskDone, setTaskDone] = useState(false);
     const [popupStyle, setPopupStyle] = useState({});
 
     // Mentions state for UI popover
@@ -163,6 +166,16 @@ const AnnotationPopup = ({
             await onReopen(thread.id);
         } catch { /* handled upstream */ }
         finally { setResolving(false); }
+    };
+
+    const doCreateTask = async () => {
+        if (!onCreateTask || taskBusy || taskDone) return;
+        setTaskBusy(true);
+        try {
+            await onCreateTask(thread);
+            setTaskDone(true);
+        } catch { /* handled upstream */ }
+        finally { setTaskBusy(false); }
     };
 
     const isResolved = thread?.status === 'resolved';
@@ -315,18 +328,33 @@ const AnnotationPopup = ({
                                 </div>
                             ) : (
                                 <div className="flex items-center justify-between gap-2">
-                                    <button
-                                        onClick={() => setShowReplyInput(true)}
-                                        className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500 hover:text-mv-gold transition-colors"
-                                    >
-                                        <MessageSquare size={12} />
-                                        Répondre
-                                        {thread.replies && thread.replies.length > 0 && (
-                                            <span className="px-1.5 py-0.5 rounded-full bg-white/8 text-[9px] text-gray-400 tabular-nums">
-                                                {thread.replies.length}
-                                            </span>
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={() => setShowReplyInput(true)}
+                                            className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500 hover:text-mv-gold transition-colors"
+                                        >
+                                            <MessageSquare size={12} />
+                                            Répondre
+                                            {thread.replies && thread.replies.length > 0 && (
+                                                <span className="px-1.5 py-0.5 rounded-full bg-white/8 text-[9px] text-gray-400 tabular-nums">
+                                                    {thread.replies.length}
+                                                </span>
+                                            )}
+                                        </button>
+
+                                        {/* Send to Kanban */}
+                                        {onCreateTask && (
+                                            <button
+                                                onClick={doCreateTask}
+                                                disabled={taskBusy || taskDone}
+                                                title="Créer une tâche dans le tableau à partir de ce retour"
+                                                className={`flex items-center gap-1.5 text-[11px] font-medium transition-colors ${taskDone ? 'text-green-400' : 'text-gray-500 hover:text-mv-gold'}`}
+                                            >
+                                                {taskBusy ? <Loader2 size={12} className="animate-spin" /> : taskDone ? <CheckCircle size={12} /> : <ListPlus size={12} />}
+                                                {taskDone ? 'Dans le tableau' : 'Tâche'}
+                                            </button>
                                         )}
-                                    </button>
+                                    </div>
 
                                     {/* Resolve / Reopen */}
                                     {isResolved ? (

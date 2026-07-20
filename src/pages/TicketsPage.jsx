@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import {
     Ticket, Search, CheckCircle, Clock, MessageSquare,
     CornerDownRight, ExternalLink, Loader2, RotateCcw,
-    Filter, ArrowUpDown,
+    Filter, ArrowUpDown, ListPlus,
 } from 'lucide-react';
 import { annotationService } from '../services/annotationService';
 import { useToast } from '../hooks/useToast';
+import { useData } from '../context/DataContext';
 import { LuxuryTitle } from '../components/common/LuxuryTitle';
 
 const formatDate = (iso) => {
@@ -34,9 +35,11 @@ const TicketsPage = () => {
     const navigate = useNavigate();
     const toast = useToast();
 
+    const { createTask } = useData();
     const [tickets, setTickets] = useState([]);
+    const [taskedIds, setTaskedIds] = useState(new Set());
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('all');
+    const [activeTab, setActiveTab] = useState('open');
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState('newest');
     const [showSortMenu, setShowSortMenu] = useState(false);
@@ -120,6 +123,23 @@ const TicketsPage = () => {
             toast.error('Impossible de rouvrir le ticket');
         } finally {
             setActionLoading(null);
+        }
+    };
+
+    const handleCreateTask = async (ticket) => {
+        if (!ticket.project_id || taskedIds.has(ticket.id)) return;
+        const label = (ticket.content || 'Retouche demandée').replace(/\s+/g, ' ').trim();
+        try {
+            await createTask({
+                project_id: ticket.project_id,
+                title: label.length > 80 ? `${label.slice(0, 79)}…` : label,
+                description: `Depuis un retour sur « ${ticket.asset_name || 'un visuel'} »`,
+                status: 'todo',
+            });
+            setTaskedIds(prev => new Set(prev).add(ticket.id));
+            toast.success('Tâche ajoutée au tableau');
+        } catch {
+            toast.error('Impossible de créer la tâche');
         }
     };
 
@@ -313,6 +333,17 @@ const TicketsPage = () => {
                                         >
                                             <ExternalLink size={11} />
                                             Voir
+                                        </button>
+
+                                        {/* Send to Kanban */}
+                                        <button
+                                            onClick={() => handleCreateTask(ticket)}
+                                            disabled={taskedIds.has(ticket.id)}
+                                            title="Créer une tâche dans le tableau"
+                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11px] font-medium transition-all ${taskedIds.has(ticket.id) ? 'border-green-500/20 text-green-400' : 'border-white/10 text-gray-400 hover:text-white hover:border-white/25'}`}
+                                        >
+                                            {taskedIds.has(ticket.id) ? <CheckCircle size={11} /> : <ListPlus size={11} />}
+                                            {taskedIds.has(ticket.id) ? 'Dans le tableau' : 'Tâche'}
                                         </button>
 
                                         {/* Resolve / Reopen */}
