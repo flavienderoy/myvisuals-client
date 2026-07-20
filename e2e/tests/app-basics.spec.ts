@@ -16,4 +16,10 @@ test.describe('Basic Application Setup', () => {
     await page.goto('/');
     await expect(page).toHaveURL(/\/$/);
   });
+
+  test('landing exposes unified auth entry points', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('button', { name: /se connecter/i }).first()).toBeVisible();
+    await expect(page.getByRole('button', { name: /s'inscrire/i }).first()).toBeVisible();
+  });
 });

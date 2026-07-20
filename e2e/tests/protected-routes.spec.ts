@@ -1,15 +1,14 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Protected routes (studio)', () => {
-  test('should redirect to /login when accessing the studio without auth', async ({ page }) => {
-    await page.goto('/studio');
-    await expect(page).toHaveURL(/.*login/);
-  });
-
-  test('should redirect to /login when accessing the profile without auth', async ({ page }) => {
-    await page.goto('/profile');
-    await expect(page).toHaveURL(/.*login/);
-  });
+  // Every studio surface must bounce an unauthenticated visitor to /login
+  const studioRoutes = ['/studio', '/studio/team', '/profile', '/tickets', '/team', '/messages'];
+  for (const route of studioRoutes) {
+    test(`redirects ${route} to /login without auth`, async ({ page }) => {
+      await page.goto(route);
+      await expect(page).toHaveURL(/.*login/);
+    });
+  }
 });
 
 test.describe('Protected routes (client portal)', () => {
