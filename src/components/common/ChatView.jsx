@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Send, Loader2, MessageSquare, Paperclip, FileText, Download, X, Check, CheckCheck,
-    SmilePlus, Reply, Plus, Search, Hash, Users, FolderOpen, ArrowLeft, UserPlus,
+    SmilePlus, Reply, Plus, Search, Hash, Users, FolderOpen, ArrowLeft, UserPlus, Eye,
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { conversationService } from '../../services/conversationService';
@@ -82,7 +82,7 @@ const ConversationRow = ({ convo, active, myId, onClick }) => {
     );
 };
 
-export const ChatView = () => {
+export const ChatView = ({ fullPage = false }) => {
     const { currentUser } = useData();
     const toast = useToast();
     const myId = currentUser?.id;
@@ -113,6 +113,20 @@ export const ChatView = () => {
     const bottomRef = useRef(null);
     const channelRef = useRef(null);
     const typingTimeoutRef = useRef(null);
+    const messagesContainerRef = useRef(null);
+
+    // Scroll to a specific message and highlight it with a gold glow
+    const scrollToMessage = useCallback((messageId) => {
+        const el = document.getElementById(`cmsg-${messageId}`);
+        if (!el) return;
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.style.animation = 'none';
+        // Force reflow to restart animation
+        void el.offsetHeight;
+        el.style.animation = 'message-glow 1.5s ease-out';
+        el.style.borderRadius = '12px';
+        setTimeout(() => { el.style.animation = ''; }, 1600);
+    }, []);
 
     const selected = conversations.find((c) => c.id === selectedId) || null;
     const selectedMeta = useConversationMeta(selected, myId);
@@ -131,6 +145,31 @@ export const ChatView = () => {
     }, [selectedId]);
 
     useEffect(() => { loadList(true); }, [loadList]);
+
+    // Live unread: bump the rail when a message lands in a conversation that
+    // isn't currently open (the open one is handled by its own subscription).
+    const conversationsRef = useRef(conversations);
+    const selectedIdRef = useRef(selectedId);
+    useEffect(() => { conversationsRef.current = conversations; }, [conversations]);
+    useEffect(() => { selectedIdRef.current = selectedId; }, [selectedId]);
+    useEffect(() => {
+        if (!myId) return;
+        const ch = supabase.channel('messages-global')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+                const m = payload.new;
+                if (!m || m.sender_id === myId || m.conversation_id === selectedIdRef.current) return;
+                if (!conversationsRef.current.some((c) => c.id === m.conversation_id)) return;
+                setConversations((prev) => {
+                    const idx = prev.findIndex((c) => c.id === m.conversation_id);
+                    if (idx === -1) return prev;
+                    const preview = (m.content || (m.file_name ? '📎 Pièce jointe' : '')).slice(0, 60);
+                    const bumped = { ...prev[idx], unread: (prev[idx].unread || 0) + 1, updated_at: m.created_at, lastMessage: { content: m.content, created_at: m.created_at, preview } };
+                    return [bumped, ...prev.filter((_, i) => i !== idx)];
+                });
+            })
+            .subscribe();
+        return () => supabase.removeChannel(ch);
+    }, [myId]);
 
     // Load messages + realtime for the selected conversation
     useEffect(() => {
@@ -243,17 +282,21 @@ export const ChatView = () => {
     const openConversation = (id) => { setSelectedId(id); setMobilePane('thread'); };
 
     return (
-        <div className="flex h-[calc(100dvh-14rem)] min-h-[440px] bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden">
+        <div className={`flex overflow-hidden ${fullPage ? 'h-full w-full' : 'h-[calc(100dvh-14rem)] min-h-[440px] bg-white/[0.03] border border-white/10 rounded-2xl'}`}>
             {/* ===== Rail ===== */}
-            <aside className={`w-full md:w-80 shrink-0 border-r border-white/10 flex flex-col min-h-0 bg-black/20 ${mobilePane === 'thread' ? 'hidden md:flex' : 'flex'}`}>
-                <div className="p-3 border-b border-white/10 shrink-0 space-y-3">
+            <aside className={`w-full md:w-80 shrink-0 border-r border-white/10 flex flex-col min-h-0 ${fullPage ? 'bg-[#0a0a0a]' : 'bg-black/20'} ${mobilePane === 'thread' ? 'hidden md:flex' : 'flex'}`}>
+                <div className={`shrink-0 border-b border-white/10 ${fullPage ? 'px-5 pt-6 pb-4 space-y-4' : 'p-3 space-y-3'}`}>
                     <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-bold text-white">Messages</h3>
-                        <button onClick={() => setNewOpen(true)} className="w-8 h-8 rounded-lg bg-mv-gold text-black flex items-center justify-center hover:bg-white transition-colors" aria-label="Nouvelle conversation">
+                        <div>
+                            {fullPage && <h1 className="text-xl font-bold text-white tracking-tight">Messagerie</h1>}
+                            {!fullPage && <h3 className="text-sm font-bold text-white">Messages</h3>}
+                            {fullPage && <p className="text-xs text-gray-500 mt-0.5">Projets, groupes et messages directs</p>}
+                        </div>
+                        <button onClick={() => setNewOpen(true)} className={`rounded-lg bg-mv-gold text-black flex items-center justify-center hover:bg-white transition-colors ${fullPage ? 'w-9 h-9' : 'w-8 h-8'}`} aria-label="Nouvelle conversation">
                             <Plus size={17} />
                         </button>
                     </div>
-                    <div className="flex items-center gap-2 bg-black/30 border border-white/10 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-2 bg-white/[0.04] border border-white/[0.06] rounded-xl px-3 py-2.5 focus-within:border-mv-gold/30 transition-colors">
                         <Search size={14} className="text-gray-500" />
                         <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher…" className="flex-1 bg-transparent text-sm text-white placeholder-gray-600 outline-none" />
                     </div>
@@ -287,20 +330,23 @@ export const ChatView = () => {
             </aside>
 
             {/* ===== Thread ===== */}
-            <section className={`flex-1 flex-col min-w-0 relative ${mobilePane === 'thread' ? 'flex' : 'hidden md:flex'}`}>
+            <section className={`flex-1 flex-col min-w-0 relative ${fullPage ? 'bg-[#060606]' : ''} ${mobilePane === 'thread' ? 'flex' : 'hidden md:flex'}`}>
                 {!selected ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
-                        <MessageSquare size={30} className="text-gray-700 mb-3" />
-                        <p className="text-sm text-gray-500">Sélectionnez une conversation.</p>
+                        <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mb-5">
+                            <MessageSquare size={28} className="text-gray-600" />
+                        </div>
+                        <p className="text-base font-semibold text-gray-400 mb-1">Aucune conversation sélectionnée</p>
+                        <p className="text-sm text-gray-600">Choisissez une conversation dans la liste<br/>ou démarrez-en une nouvelle.</p>
                     </div>
                 ) : (
                     <>
                         {/* Header */}
-                        <div className="px-4 py-3 border-b border-white/10 shrink-0 flex items-center gap-3 bg-black/40">
+                        <div className={`px-5 py-3.5 border-b border-white/[0.06] shrink-0 flex items-center gap-3 ${fullPage ? 'bg-[#0a0a0a]/80 backdrop-blur-xl' : 'bg-black/40'}`}>
                             <button onClick={() => setMobilePane('list')} className="md:hidden p-1.5 -ml-1.5 rounded-lg hover:bg-white/10 text-gray-400" aria-label="Retour"><ArrowLeft size={18} /></button>
                             {selectedMeta.kind === 'direct'
-                                ? <Avatar src={selectedMeta.avatar} name={selectedMeta.avatarName} size={34} />
-                                : <div className={`w-[34px] h-[34px] rounded-full flex items-center justify-center ${selectedMeta.kind === 'project' ? 'bg-mv-gold/15 text-mv-gold' : 'bg-white/10 text-gray-300'}`}>{selectedMeta.kind === 'project' ? <FolderOpen size={16} /> : <Hash size={16} />}</div>}
+                                ? <Avatar src={selectedMeta.avatar} name={selectedMeta.avatarName} size={36} />
+                                : <div className={`w-[36px] h-[36px] rounded-full flex items-center justify-center ${selectedMeta.kind === 'project' ? 'bg-mv-gold/15 text-mv-gold' : 'bg-white/10 text-gray-300'}`}>{selectedMeta.kind === 'project' ? <FolderOpen size={16} /> : <Hash size={16} />}</div>}
                             <div className="min-w-0 flex-1">
                                 <p className="text-sm font-bold text-white truncate">{selectedMeta.name}</p>
                                 <p className="text-[11px] text-gray-500 truncate">
@@ -361,10 +407,13 @@ export const ChatView = () => {
                                                         )}
                                                         <div className={`p-1 flex flex-col ${isMine ? `bg-mv-gold text-black rounded-l-xl rounded-tr-xl ${!lastOfGroup ? 'rounded-br-sm' : 'rounded-br-xl'}` : `bg-[#1e1e1e] border border-white/5 text-white rounded-r-xl rounded-tl-xl ${!lastOfGroup ? 'rounded-bl-sm' : 'rounded-bl-xl'}`}`}>
                                                             {repliedMsg && (
-                                                                <div className={`mb-1.5 px-2.5 py-1.5 rounded-md border-l-2 text-xs truncate max-w-full ${isMine ? 'bg-black/10 border-black/30 text-black/80' : 'bg-black/20 border-white/20 text-gray-300'}`}>
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); scrollToMessage(repliedMsg.id); }}
+                                                                    className={`mb-1.5 px-2.5 py-1.5 rounded-md border-l-2 text-xs truncate max-w-full text-left cursor-pointer hover:opacity-80 transition-opacity ${isMine ? 'bg-black/10 border-black/30 text-black/80' : 'bg-black/20 border-white/20 text-gray-300'}`}
+                                                                >
                                                                     <span className="font-bold mr-1">{repliedMsg.sender_id === myId ? 'Moi' : repliedMsg.sender?.name}</span>
                                                                     <span className="opacity-80">{repliedMsg.content || (repliedMsg.file_name ? 'Fichier joint' : '')}</span>
-                                                                </div>
+                                                                </button>
                                                             )}
                                                             {msg.file_url && (
                                                                 <div className={`overflow-hidden rounded-lg ${msg.content ? 'mb-1.5' : ''}`}>
@@ -393,6 +442,12 @@ export const ChatView = () => {
                                                             {Object.entries(reactionCounts).map(([emoji, count]) => (
                                                                 <button key={emoji} onClick={() => handleReaction(msg.id, emoji)} className={`text-[11px] px-1.5 py-0.5 rounded-full border flex items-center gap-1 ${myReactions.includes(emoji) ? 'bg-mv-gold/20 border-mv-gold/30 text-white' : 'bg-[#1a1a1a] border-white/10 text-gray-400 hover:text-white'}`}>{emoji} <span className="opacity-70 text-[10px]">{count > 1 ? count : ''}</span></button>
                                                             ))}
+                                                            {lastOfGroup && isMine && (
+                                                                <span className={`flex items-center gap-0.5 text-[10px] ml-1 ${(msg.read_by || []).length > 0 ? 'text-mv-gold' : 'text-gray-500'}`} title={(msg.read_by || []).length > 0 ? 'Lu' : 'Envoyé'}>
+                                                                    {(msg.read_by || []).length > 0 ? <CheckCheck size={13} /> : <Check size={13} />}
+                                                                    {(msg.read_by || []).length > 0 && <Eye size={11} className="opacity-60" />}
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     )}
                                                 </div>
@@ -414,7 +469,7 @@ export const ChatView = () => {
                         </div>
 
                         {/* Composer */}
-                        <div className="p-3 bg-[#0a0a0a] border-t border-white/10 shrink-0">
+                        <div className={`p-3 border-t border-white/[0.06] shrink-0 ${fullPage ? 'bg-[#0a0a0a] px-5 py-4' : 'bg-[#0a0a0a]'}`}>
                             {replyingTo && (
                                 <div className="mb-2 flex items-center gap-3 p-2.5 bg-white/5 border border-white/10 rounded-lg">
                                     <Reply size={14} className="text-gray-300" />
