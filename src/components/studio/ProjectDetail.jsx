@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Grid, Package, CheckCircle, Plus, ShieldCheck, Clock, Monitor, Settings, Download, Loader2, Share2 } from 'lucide-react';
+import { ArrowLeft, Grid, Package, CheckCircle, Plus, ShieldCheck, Clock, Monitor, Settings, Download, Loader2, Share2, ListTodo, Calendar as CalendarIcon, LayoutList } from 'lucide-react';
 import { LuxuryTitle } from '../common/LuxuryTitle';
 import { ProductionView } from './StudioViews';
 import { PageTransition } from '../common/PageTransition';
@@ -11,9 +11,19 @@ import { AuditTrail } from './AuditTrail';
 import { assetService } from '../../services/assetService';
 import { saveBlob } from '../../utils/download';
 import { useToast } from '../../hooks/useToast';
+import { useData } from '../../context/DataContext';
+import { TaskBoard } from './tasks/TaskBoard';
+import { TaskCalendar } from './tasks/TaskCalendar';
+import { AddTaskModal } from './tasks/AddTaskModal';
+import { TaskDetailPanel } from './tasks/TaskDetailPanel';
 
 export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false }) => {
     const [activeTab, setActiveTab] = useState('production');
+    const [tasksView, setTasksView] = useState('board');
+    const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+    const [selectedTask, setSelectedTask] = useState(null);
+    const { tasks } = useData();
+    const projectTasks = tasks.filter(t => t.project_id === project.id || t.projectId === project.id);
     const [isUploadOpen, setIsUploadOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [isShareOpen, setIsShareOpen] = useState(false);
@@ -160,6 +170,15 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
                     </span>
                     {activeTab === 'delivery' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-mv-gold"></div>}
                 </button>
+                <button
+                    onClick={() => setActiveTab('tasks')}
+                    className={`pb-3 text-sm font-medium tracking-widest uppercase transition-colors relative ${activeTab === 'tasks' ? 'text-mv-gold' : 'text-gray-500 hover:text-gray-300'}`}
+                >
+                    <span className="flex items-center gap-2">
+                        <ListTodo size={14} /> Tâches
+                    </span>
+                    {activeTab === 'tasks' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-mv-gold"></div>}
+                </button>
             </div>
 
             {/* Tab Content */}
@@ -233,6 +252,43 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
                         {!isClient && <AuditTrail projectId={project.id} />}
                     </div>
                 )}
+
+                {activeTab === 'tasks' && (
+                    <div className="animate-fade-in space-y-6">
+                        <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-xl p-4">
+                            <div className="flex bg-black/40 border border-white/10 rounded-full p-1">
+                                <button
+                                    onClick={() => setTasksView('board')}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors ${tasksView === 'board' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'}`}
+                                >
+                                    <LayoutList size={16} />
+                                    <span>Kanban</span>
+                                </button>
+                                <button
+                                    onClick={() => setTasksView('calendar')}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors ${tasksView === 'calendar' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'}`}
+                                >
+                                    <CalendarIcon size={16} />
+                                    <span>Calendrier</span>
+                                </button>
+                            </div>
+
+                            <button 
+                                onClick={() => setIsAddTaskModalOpen(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-mv-gold hover:bg-white text-black font-bold rounded-full text-sm transition-colors"
+                            >
+                                <Plus size={16} />
+                                <span>Nouvelle Tâche</span>
+                            </button>
+                        </div>
+
+                        {tasksView === 'board' ? (
+                            <TaskBoard tasks={projectTasks} projects={[]} onTaskClick={setSelectedTask} />
+                        ) : (
+                            <TaskCalendar tasks={projectTasks} projects={[]} onTaskClick={setSelectedTask} />
+                        )}
+                    </div>
+                )}
             </div>
 
             <Modal isOpen={isUploadOpen} onClose={() => setIsUploadOpen(false)} title="Ajouter des images">
@@ -254,6 +310,15 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
                 isOpen={isShareOpen}
                 onClose={() => setIsShareOpen(false)}
                 projectId={project.id}
+            />
+            <AddTaskModal 
+                isOpen={isAddTaskModalOpen}
+                onClose={() => setIsAddTaskModalOpen(false)}
+                projectId={project.id}
+            />
+            <TaskDetailPanel 
+                task={selectedTask}
+                onClose={() => setSelectedTask(null)}
             />
         </PageTransition>
     );

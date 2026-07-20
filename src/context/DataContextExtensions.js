@@ -99,14 +99,18 @@ export const createTaskFunctions = (tasks, setTasks, toast, addActivity) => ({
             setTasks(prev => [...prev, newTask]);
 
             // Log activity
+            const description = taskData.assignedTo
+                ? `Tâche assignée à ${taskData.assignedTo}: ${taskData.title}`
+                : `Nouvelle tâche créée à assigner : ${taskData.title}`;
+
             addActivity({
                 type: ACTIVITY_TYPES.TASK_ASSIGNED,
                 project_id: taskData.projectId || taskData.project_id,
                 metadata: { assetId: taskData.assetId },
-                description: `Tâche assignée à ${taskData.assignedTo}: ${taskData.title}`,
+                description,
             });
 
-            toast.success('Tâche créée et assignée');
+            toast.success('Tâche créée');
             return newTask;
         } catch (e) {
             toast.error("Erreur lors de la création de la tâche");
