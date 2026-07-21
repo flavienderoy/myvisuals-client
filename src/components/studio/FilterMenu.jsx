@@ -42,23 +42,23 @@ export const FilterMenu = ({ activeFilters, onFilterChange, availableClients }) 
 
     return (
         <div className="relative" ref={menuRef}>
-            {/* Trigger Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-full border transition-all ${isOpen || activeFilterCount > 0
-                    ? 'bg-white/10 border-white/50 text-white shadow-sm'
-                    : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all text-xs font-medium ${isOpen || activeFilterCount > 0
+                    ? 'bg-white/15 text-white shadow-sm'
+                    : 'text-gray-400 hover:bg-white/10 hover:text-white'
                     }`}
             >
-                <Filter size={16} className={activeFilterCount > 0 ? "text-mv-gold" : ""} />
-                <span className="text-sm font-medium">Filtrer</span>
+                <Filter size={14} className={activeFilterCount > 0 ? "text-mv-gold" : ""} />
+                <span>Filtrer</span>
                 {activeFilterCount > 0 && (
-                    <span className="flex items-center justify-center w-5 h-5 bg-mv-gold text-black text-xs font-bold rounded-full">
+                    <span className="flex items-center justify-center w-4 h-4 bg-mv-gold text-black text-[10px] font-bold rounded-full">
                         {activeFilterCount}
                     </span>
                 )}
-                <ChevronDown size={14} className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown size={12} className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
+
 
             {/* Dropdown Panel */}
             {isOpen && (

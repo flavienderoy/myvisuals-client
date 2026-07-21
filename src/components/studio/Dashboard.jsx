@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { LuxuryTitle } from '../common/LuxuryTitle';
-import { Search, Plus, FolderOpen, Clock, AlertCircle, Users, FolderHeart } from 'lucide-react';
+import { Search, Plus, FolderOpen, Clock, AlertCircle, Users, FolderHeart, ChevronDown, FolderPlus, Building2 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { ProjectCard, ProjectSlider } from './ProjectSlider';
 import { FilterMenu } from './FilterMenu';
@@ -22,7 +22,19 @@ export const Dashboard = () => {
     const [isClientModalOpen, setIsClientModalOpen] = useState(false);
     const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
     const [isSmartFolderModalOpen, setIsSmartFolderModalOpen] = useState(false);
+    const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
     const [selectedClientForProject, setSelectedClientForProject] = useState("");
+    const createMenuRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (createMenuRef.current && !createMenuRef.current.contains(event.target)) {
+                setIsCreateMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const openProjectModal = useCallback((clientName = "") => {
         setSelectedClientForProject(clientName);
@@ -36,6 +48,7 @@ export const Dashboard = () => {
             client: filters.client || []
         });
     };
+
 
     // Real operational counters (no mock revenue)
     const stats = useMemo(() => {
@@ -101,57 +114,99 @@ export const Dashboard = () => {
 
     return (
         <div className="space-y-12 animate-fade-in overflow-hidden p-8">
-            {/* Search Bar & Filter */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+            {/* Header Title & Unified Controls */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-2 border-b border-white/10">
                 <div>
-                    <LuxuryTitle text="Tableau de Bord" size="text-4xl" className="mb-3 text-white" />
-                    <p className="text-gray-400 text-lg">Re-bonjour, <span className="text-white">{currentUser.name}</span>.</p>
+                    <LuxuryTitle text="Tableau de Bord" size="text-4xl" className="mb-2 text-white" />
+                    <p className="text-gray-400 text-sm">Re-bonjour, <span className="text-white font-medium">{currentUser.name}</span>.</p>
                 </div>
 
-                <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto items-center">
-                    <button
-                        onClick={() => setIsClientModalOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-full text-white text-sm transition-colors"
-                    >
-                        <Plus size={16} />
-                        <span>Nouvelle Entreprise</span>
-                    </button>
-                    <button
-                        onClick={() => openProjectModal()}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-mv-gold hover:bg-white text-black font-bold rounded-full text-sm transition-colors"
-                    >
-                        <Plus size={16} />
-                        <span>Nouveau Projet</span>
-                    </button>
+                <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                    {/* Integrated Search & Filter Control Capsule */}
+                    <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full p-1.5 backdrop-blur-xl shadow-lg">
+                        {/* Search Input */}
+                        <div className="relative flex-1 md:w-64">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={15} />
+                            <input
+                                type="text"
+                                placeholder="Rechercher..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full bg-transparent py-1 pl-8 pr-3 text-xs text-white focus:outline-none placeholder:text-gray-500"
+                            />
+                        </div>
 
-                    {/* Advanced Filter Menu */}
-                    <FilterMenu
-                        availableClients={availableClients}
-                        activeFilters={activeFilters}
-                        onFilterChange={setActiveFilters}
-                    />
+                        <div className="h-4 w-px bg-white/10"></div>
 
-                    <button
-                        onClick={() => setIsSmartFolderModalOpen(true)}
-                        className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-mv-gold transition-colors"
-                        title="Sauvegarder ces filtres (Smart Folder)"
-                    >
-                        <FolderHeart size={18} />
-                    </button>
-
-                    {/* Search Bar */}
-                    <div className="relative w-full md:w-72">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                        <input
-                            type="text"
-                            placeholder="Rechercher..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-full py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-mv-gold/50 transition-colors placeholder:text-gray-600 shadow-sm"
+                        {/* Filter Menu */}
+                        <FilterMenu
+                            availableClients={availableClients}
+                            activeFilters={activeFilters}
+                            onFilterChange={setActiveFilters}
                         />
+
+                        {/* Smart Folder Saver */}
+                        <button
+                            onClick={() => setIsSmartFolderModalOpen(true)}
+                            className="p-1.5 text-gray-400 hover:text-mv-gold hover:bg-white/10 rounded-full transition-all"
+                            title="Sauvegarder en Smart Folder"
+                        >
+                            <FolderHeart size={15} />
+                        </button>
+                    </div>
+
+                    {/* Single Gold Creation CTA with Dropdown */}
+                    <div className="relative" ref={createMenuRef}>
+                        <button
+                            onClick={() => setIsCreateMenuOpen(!isCreateMenuOpen)}
+                            className="flex items-center gap-2 px-4 py-2 bg-mv-gold hover:bg-white text-black font-bold rounded-full text-xs uppercase tracking-wider transition-all shadow-md active:scale-95"
+                        >
+                            <Plus size={16} />
+                            <span>Nouveau</span>
+                            <ChevronDown size={13} className={`transition-transform duration-200 ${isCreateMenuOpen ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {isCreateMenuOpen && (
+                            <div className="absolute right-0 top-full mt-2 w-56 bg-[#0c0c0c]/95 border border-white/15 rounded-2xl shadow-2xl z-50 overflow-hidden backdrop-blur-2xl animate-fade-in-up py-1.5">
+                                <button
+                                    onClick={() => {
+                                        setIsCreateMenuOpen(false);
+                                        openProjectModal();
+                                    }}
+                                    className="w-full flex items-center gap-3 px-4 py-3 text-xs text-white hover:bg-mv-gold hover:text-black transition-colors text-left group"
+                                >
+                                    <div className="p-2 rounded-lg bg-white/5 group-hover:bg-black/10 text-mv-gold group-hover:text-black transition-colors">
+                                        <FolderPlus size={16} />
+                                    </div>
+                                    <div>
+                                        <div className="font-bold text-sm">Nouveau Projet</div>
+                                        <div className="text-[11px] text-gray-400 group-hover:text-black/70">Créer un espace projet</div>
+                                    </div>
+                                </button>
+
+                                <div className="my-1 border-t border-white/10"></div>
+
+                                <button
+                                    onClick={() => {
+                                        setIsCreateMenuOpen(false);
+                                        setIsClientModalOpen(true);
+                                    }}
+                                    className="w-full flex items-center gap-3 px-4 py-3 text-xs text-white hover:bg-mv-gold hover:text-black transition-colors text-left group"
+                                >
+                                    <div className="p-2 rounded-lg bg-white/5 group-hover:bg-black/10 text-mv-gold group-hover:text-black transition-colors">
+                                        <Building2 size={16} />
+                                    </div>
+                                    <div>
+                                        <div className="font-bold text-sm">Nouvelle Entreprise</div>
+                                        <div className="text-[11px] text-gray-400 group-hover:text-black/70">Ajouter une entreprise client</div>
+                                    </div>
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
+
 
             <SmartFolderList onApplyFolder={handleApplySmartFolder} />
 
