@@ -348,8 +348,15 @@ export const DataProvider = ({ children }) => {
     // --- Navigation / Selection State ---
     const [currentSelection, setCurrentSelection] = useState({ type: 'global', id: null });
     const selectGlobal = () => setCurrentSelection({ type: 'global', id: null });
-    const selectClient = (clientName) => setCurrentSelection({ type: 'client', id: clientName });
-    const selectProject = (projectId) => setCurrentSelection({ type: 'project', id: projectId });
+    const selectClient = (clientName) => {
+        const id = typeof clientName === 'object' ? (clientName?.name || clientName?.id) : clientName;
+        setCurrentSelection({ type: 'client', id });
+    };
+    const selectProject = (projectId) => {
+        const id = typeof projectId === 'object' ? projectId?.id : projectId;
+        setCurrentSelection({ type: 'project', id });
+    };
+
 
     // --- Extensions ---
     const activityFunctions = createActivityFunctions(activities, setActivities, toast);

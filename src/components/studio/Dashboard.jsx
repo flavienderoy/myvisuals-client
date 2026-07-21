@@ -240,8 +240,9 @@ export const Dashboard = () => {
                                                     <ProjectCard
                                                         key={project.id}
                                                         project={project}
-                                                        onClick={() => selectProject(project)}
+                                                        onClick={() => selectProject(project.id)}
                                                     />
+
                                                 ))}
                                             </div>
                                         )
