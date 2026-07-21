@@ -55,6 +55,7 @@ const AnnotationPopup = ({
     const [resolving, setResolving] = useState(false);
     const [taskBusy, setTaskBusy] = useState(false);
     const [taskDone, setTaskDone] = useState(false);
+    const [showTaskMenu, setShowTaskMenu] = useState(false);
     const [popupStyle, setPopupStyle] = useState({});
 
     // Mentions state for UI popover
@@ -168,11 +169,12 @@ const AnnotationPopup = ({
         finally { setResolving(false); }
     };
 
-    const doCreateTask = async () => {
+    const doCreateTask = async (assigneeId = null) => {
         if (!onCreateTask || taskBusy || taskDone) return;
         setTaskBusy(true);
+        setShowTaskMenu(false);
         try {
-            await onCreateTask(thread);
+            await onCreateTask(thread, assigneeId);
             setTaskDone(true);
         } catch { /* handled upstream */ }
         finally { setTaskBusy(false); }
@@ -342,17 +344,39 @@ const AnnotationPopup = ({
                                             )}
                                         </button>
 
-                                        {/* Send to Kanban */}
+                                        {/* Send to Kanban — with assignee picker */}
                                         {onCreateTask && (
-                                            <button
-                                                onClick={doCreateTask}
-                                                disabled={taskBusy || taskDone}
-                                                title="Créer une tâche dans le tableau à partir de ce retour"
-                                                className={`flex items-center gap-1.5 text-[11px] font-medium transition-colors ${taskDone ? 'text-green-400' : 'text-gray-500 hover:text-mv-gold'}`}
-                                            >
-                                                {taskBusy ? <Loader2 size={12} className="animate-spin" /> : taskDone ? <CheckCircle size={12} /> : <ListPlus size={12} />}
-                                                {taskDone ? 'Dans le tableau' : 'Tâche'}
-                                            </button>
+                                            <div className="relative">
+                                                <button
+                                                    onClick={() => setShowTaskMenu((v) => !v)}
+                                                    disabled={taskBusy || taskDone}
+                                                    title="Créer une tâche dans le tableau à partir de ce retour"
+                                                    className={`flex items-center gap-1.5 text-[11px] font-medium transition-colors ${taskDone ? 'text-green-400' : 'text-gray-500 hover:text-mv-gold'}`}
+                                                >
+                                                    {taskBusy ? <Loader2 size={12} className="animate-spin" /> : taskDone ? <CheckCircle size={12} /> : <ListPlus size={12} />}
+                                                    {taskDone ? 'Dans le tableau' : 'Tâche'}
+                                                </button>
+                                                {showTaskMenu && !taskDone && (
+                                                    <>
+                                                        <div className="fixed inset-0 z-40" onClick={() => setShowTaskMenu(false)} />
+                                                        <div className="absolute bottom-full mb-2 left-0 w-52 max-h-56 overflow-y-auto bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl z-50 py-1">
+                                                            <p className="px-3 py-1.5 text-[10px] text-gray-500 uppercase tracking-widest">Assigner la tâche à</p>
+                                                            <button onClick={() => doCreateTask(null)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:bg-white/5">
+                                                                <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-[10px]">—</span>
+                                                                Sans assignation
+                                                            </button>
+                                                            {(projectMembers || []).map((m) => (
+                                                                <button key={m.id} onClick={() => doCreateTask(m.id)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:bg-white/5">
+                                                                    {m.avatar_url
+                                                                        ? <img src={m.avatar_url} alt={m.name} className="w-6 h-6 rounded-full object-cover" />
+                                                                        : <span className="w-6 h-6 rounded-full bg-mv-gold flex items-center justify-center text-black text-[10px] font-bold">{m.name?.[0]?.toUpperCase()}</span>}
+                                                                    <span className="truncate">{m.name}</span>
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
                                         )}
                                     </div>
 

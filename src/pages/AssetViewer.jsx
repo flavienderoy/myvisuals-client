@@ -363,7 +363,7 @@ const AssetViewer = () => {
     const selectedThread = selectedPin ? visibleThreads.find(t => t.id === selectedPin) : null;
     const selectedPinIndex = selectedThread ? visibleThreads.indexOf(selectedThread) + 1 : 0;
 
-    const handleCreateTask = async (thread) => {
+    const handleCreateTask = async (thread, assigneeId = null) => {
         if (!asset?.project_id) return;
         const label = (thread?.content || 'Retouche demandée').replace(/\s+/g, ' ').trim();
         await createTask({
@@ -371,8 +371,10 @@ const AssetViewer = () => {
             title: label.length > 80 ? `${label.slice(0, 79)}…` : label,
             description: `Depuis un retour sur « ${asset.name} »`,
             status: 'todo',
+            assigned_to: assigneeId || undefined,
         });
-        toast.success('Tâche ajoutée au tableau');
+        const who = assigneeId ? projectMembers.find((m) => m.id === assigneeId)?.name : null;
+        toast.success(who ? `Tâche assignée à ${who}` : 'Tâche ajoutée au tableau');
     };
 
     return (

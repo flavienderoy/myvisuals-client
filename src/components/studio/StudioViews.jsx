@@ -26,6 +26,8 @@ export const ProductionView = ({ project, onOpenUpload }) => {
     const [renameName, setRenameName] = useState('');
     const [moveMenuFor, setMoveMenuFor] = useState(null); // asset id
     const [folderMenuFor, setFolderMenuFor] = useState(null); // folder id
+    const [dragOverId, setDragOverId] = useState(undefined); // folder id being hovered ('root' | id)
+    const [draggingAsset, setDraggingAsset] = useState(false);
 
     const reloadFolders = useCallback(() => {
         setLoadingFolders(true);
@@ -111,6 +113,21 @@ export const ProductionView = ({ project, onOpenUpload }) => {
         catch { toast.error('Déplacement impossible'); reloadFolders(); }
     };
 
+    // Drag & drop a visual onto a folder (or the breadcrumb) to file it
+    const onAssetDragStart = (e, assetId) => {
+        e.dataTransfer.setData('text/asset', assetId);
+        e.dataTransfer.effectAllowed = 'move';
+        setDraggingAsset(true);
+    };
+    const onAssetDragEnd = () => { setDraggingAsset(false); setDragOverId(undefined); };
+    const allowDrop = (e, key) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOverId(key); };
+    const onDropTo = (e, folderId, key) => {
+        e.preventDefault();
+        const assetId = e.dataTransfer.getData('text/asset');
+        setDragOverId(undefined); setDraggingAsset(false);
+        if (assetId && key !== undefined) moveAsset(assetId, folderId);
+    };
+
     const statusBadge = (status, size = 10) => {
         if (status === 'approved') return <span className="text-[10px] text-green-400 flex items-center gap-1"><CheckCircle size={size} /> Validé</span>;
         if (status === 'needs_review') return <span className="text-[10px] text-orange-400 flex items-center gap-1"><AlertCircle size={size} /> Retouches</span>;
@@ -124,13 +141,25 @@ export const ProductionView = ({ project, onOpenUpload }) => {
             {/* Toolbar: breadcrumb + actions */}
             <div className="flex flex-wrap items-center justify-between gap-3 bg-white/5 p-3 rounded-xl border border-white/10">
                 <nav className="flex items-center gap-1 text-sm min-w-0 flex-wrap">
-                    <button onClick={() => setCurrentFolderId(null)} className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors ${!currentFolderId ? 'text-white' : 'text-gray-400 hover:text-white'}`}>
+                    <button
+                        onClick={() => setCurrentFolderId(null)}
+                        onDragOver={(e) => allowDrop(e, 'root')}
+                        onDragLeave={() => setDragOverId(undefined)}
+                        onDrop={(e) => onDropTo(e, null, 'root')}
+                        className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors ${dragOverId === 'root' ? 'ring-2 ring-mv-gold bg-mv-gold/10 text-white' : !currentFolderId ? 'text-white' : 'text-gray-400 hover:text-white'}`}
+                    >
                         <Home size={15} /> Tous les visuels
                     </button>
                     {breadcrumb.map((f) => (
                         <span key={f.id} className="flex items-center gap-1 min-w-0">
                             <ChevronRight size={14} className="text-gray-600 shrink-0" />
-                            <button onClick={() => setCurrentFolderId(f.id)} className={`px-2 py-1 rounded-lg truncate transition-colors ${currentFolderId === f.id ? 'text-white font-medium' : 'text-gray-400 hover:text-white'}`}>
+                            <button
+                                onClick={() => setCurrentFolderId(f.id)}
+                                onDragOver={(e) => allowDrop(e, f.id)}
+                                onDragLeave={() => setDragOverId(undefined)}
+                                onDrop={(e) => onDropTo(e, f.id, f.id)}
+                                className={`px-2 py-1 rounded-lg truncate transition-colors ${dragOverId === f.id ? 'ring-2 ring-mv-gold bg-mv-gold/10 text-white' : currentFolderId === f.id ? 'text-white font-medium' : 'text-gray-400 hover:text-white'}`}
+                            >
                                 {f.name}
                             </button>
                         </span>
@@ -175,7 +204,14 @@ export const ProductionView = ({ project, onOpenUpload }) => {
             {childFolders.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                     {childFolders.map((f) => (
-                        <div key={f.id} onClick={() => setCurrentFolderId(f.id)} className="group relative flex items-center gap-3 p-4 bg-white/5 border border-white/10 rounded-xl hover:border-mv-gold/40 hover:bg-white/[0.07] cursor-pointer transition-colors">
+                        <div
+                            key={f.id}
+                            onClick={() => setCurrentFolderId(f.id)}
+                            onDragOver={(e) => allowDrop(e, f.id)}
+                            onDragLeave={() => setDragOverId(undefined)}
+                            onDrop={(e) => onDropTo(e, f.id, f.id)}
+                            className={`group relative flex items-center gap-3 p-4 bg-white/5 border rounded-xl cursor-pointer transition-all ${dragOverId === f.id ? 'border-mv-gold ring-2 ring-mv-gold/40 bg-mv-gold/10 scale-[1.02]' : 'border-white/10 hover:border-mv-gold/40 hover:bg-white/[0.07]'}`}
+                        >
                             <div className="w-10 h-10 rounded-lg bg-mv-gold/10 text-mv-gold flex items-center justify-center shrink-0"><Folder size={20} /></div>
                             <div className="min-w-0 flex-1">
                                 {renamingId === f.id ? (
@@ -230,7 +266,7 @@ export const ProductionView = ({ project, onOpenUpload }) => {
                             </div>
                         );
                         return viewMode === 'grid' ? (
-                            <div key={asset.id} onClick={() => openAsset(asset)} className="group relative aspect-[4/5] bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-white/30 transition-all duration-300 cursor-pointer">
+                            <div key={asset.id} draggable onDragStart={(e) => onAssetDragStart(e, asset.id)} onDragEnd={onAssetDragEnd} onClick={() => openAsset(asset)} className={`group relative aspect-[4/5] bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-white/30 transition-all duration-300 cursor-pointer ${draggingAsset ? 'active:opacity-50' : ''}`}>
                                 <img src={getAssetUrl(asset)} alt={asset.name} loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                                 <button onClick={(e) => { e.stopPropagation(); setMoveMenuFor(moveMenuFor === asset.id ? null : asset.id); }} className="absolute top-2 right-2 w-8 h-8 rounded-lg bg-black/60 backdrop-blur text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-black/80 transition z-20" title="Déplacer" aria-label="Déplacer le visuel"><FolderInput size={15} /></button>
                                 {moveMenu}
@@ -245,7 +281,7 @@ export const ProductionView = ({ project, onOpenUpload }) => {
                                 </div>
                             </div>
                         ) : (
-                            <div key={asset.id} onClick={() => openAsset(asset)} className="group relative flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10 hover:border-white/30 cursor-pointer transition-all">
+                            <div key={asset.id} draggable onDragStart={(e) => onAssetDragStart(e, asset.id)} onDragEnd={onAssetDragEnd} onClick={() => openAsset(asset)} className="group relative flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10 hover:border-white/30 cursor-pointer transition-all">
                                 <div className="flex items-center gap-4 min-w-0">
                                     <div className="w-12 h-12 rounded bg-black/50 border border-white/10 overflow-hidden shrink-0 flex items-center justify-center">
                                         {(asset.mime_type || '').startsWith('video') ? <File size={20} className="text-blue-400" /> : <img src={getAssetUrl(asset)} alt={asset.name} loading="lazy" className="w-full h-full object-cover opacity-80" />}
