@@ -1,7 +1,9 @@
 import axios from 'axios';
 import { supabase } from '../supabaseClient';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const rawApiUrl = (import.meta.env.VITE_API_URL || '').replace(/["'\r\n]/g, '').trim();
+const API_URL = rawApiUrl || 'https://myvisuals-back-645756273525.europe-west1.run.app/api';
+
 
 const api = axios.create({
     baseURL: API_URL
