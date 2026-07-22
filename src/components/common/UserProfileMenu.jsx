@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../../context/DataContext';
-import { User, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { User, LogOut, ChevronDown } from 'lucide-react';
 
 export const UserProfileMenu = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -90,17 +90,6 @@ export const UserProfileMenu = () => {
                             >
                                 <User size={16} className="text-mv-gold" />
                                 Mon Profil
-                            </button>
-                            <button
-                                onClick={() => {
-                                    navigate('/settings');
-                                    setIsOpen(false);
-                                }}
-                                role="menuitem"
-                                className="w-full px-4 py-2.5 text-left text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors flex items-center gap-3"
-                            >
-                                <Settings size={16} className="text-gray-400" />
-                                Paramètres
                             </button>
                         </div>
 

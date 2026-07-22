@@ -3,7 +3,7 @@ import { AuthLayout } from '../../layouts/AuthLayout';
 import { Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const SignIn = () => {
     const [email, setEmail] = useState('');
@@ -57,7 +57,7 @@ const SignIn = () => {
                 <div className="space-y-2">
                     <div className="flex justify-between items-center pl-1">
                         <label className="text-xs text-gray-400 uppercase tracking-widest">Mot de passe</label>
-                        <a href="#" className="text-xs text-mv-gold hover:text-white transition-colors">Oublié ?</a>
+                        <Link to="/forgot-password" className="text-xs text-mv-gold hover:text-white transition-colors">Oublié ?</Link>
                     </div>
                     <div className="relative group">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-mv-gold transition-colors" size={18} />

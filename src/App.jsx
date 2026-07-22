@@ -10,6 +10,8 @@ import AssetViewer from './pages/AssetViewer';
 import Messages from './pages/Messages';
 import SignIn from './pages/auth/SignIn';
 import SignUp from './pages/auth/SignUp';
+import ForgotPassword from './pages/auth/ForgotPassword';
+import ResetPassword from './pages/auth/ResetPassword';
 import Profile from './pages/profile/Profile';
 import { TeamSettings } from './pages/dashboard/TeamSettings';
 import { Loader } from './components/common/Loader';
@@ -52,6 +54,8 @@ function App() {
             {/* Public Auth Routes */}
             <Route path="/login" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* Client Portal Routes (auth is unified — see /login and /signup) */}
             <Route path="/client" element={

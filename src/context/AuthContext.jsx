@@ -40,13 +40,40 @@ export const AuthProvider = ({ children }) => {
 
     const value = {
         signUp: async (data) => {
-            const { error } = await supabase.auth.signUp(data);
-            if (error) throw error;
+            const payload = {
+                email: data.email,
+                password: data.password,
+                ...data.options?.data
+            };
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.error || result.details || "Erreur lors de l'inscription");
+            }
+            return result;
         },
         signIn: async (credentials) => {
-            const { data, error } = await supabase.auth.signInWithPassword(credentials);
-            if (error) throw error;
-            return data;
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(credentials)
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.error || result.details || "Erreur lors de la connexion");
+            }
+            // Set session in local Supabase SDK so the client works normally
+            if (result.session) {
+                await supabase.auth.setSession({
+                    access_token: result.session.access_token,
+                    refresh_token: result.session.refresh_token
+                });
+            }
+            return result;
         },
         signOut: async () => {
             const { error } = await supabase.auth.signOut();
