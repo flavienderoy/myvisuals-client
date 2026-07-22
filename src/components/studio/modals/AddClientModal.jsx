@@ -46,17 +46,25 @@ export const AddClientModal = ({ isOpen, onClose }) => {
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Ajouter une Entreprise">
-            <form onSubmit={handleSubmit} className="space-y-6">
-
-                {/* Image Upload Selection */}
-                <div className="flex flex-col items-center">
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            title="Nouvelle Entreprise Client"
+            subtitle="Enregistrez une entreprise client et configurez ses accès au portail."
+            maxWidth="max-w-2xl"
+        >
+            <form onSubmit={handleSubmit} className="space-y-8">
+                {/* Logo Upload Section */}
+                <div className="flex flex-col items-center justify-center p-6 bg-white/[0.02] border border-dashed border-white/15 rounded-2xl">
                     <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                        <div className={`w-24 h-24 rounded-full flex items-center justify-center overflow-hidden border-2 transition-colors ${avatar ? 'border-mv-gold' : 'border-white/10 hover:border-white/30 bg-black/20'}`}>
+                        <div className={`w-28 h-28 rounded-2xl flex items-center justify-center overflow-hidden border-2 transition-all shadow-xl ${avatar ? 'border-mv-gold ring-4 ring-mv-gold/20' : 'border-white/15 hover:border-mv-gold/50 bg-black/40'}`}>
                             {avatar ? (
-                                <img src={avatar} alt="Preview" className="w-full h-full object-cover" />
+                                <img src={avatar} alt="Logo" className="w-full h-full object-cover" />
                             ) : (
-                                <Upload className="text-gray-400 group-hover:text-white transition-colors" size={32} />
+                                <div className="flex flex-col items-center text-center gap-1.5 p-2">
+                                    <Upload className="text-gray-400 group-hover:text-mv-gold transition-colors" size={28} />
+                                    <span className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider group-hover:text-gray-300">Logo</span>
+                                </div>
                             )}
                         </div>
 
@@ -64,18 +72,16 @@ export const AddClientModal = ({ isOpen, onClose }) => {
                             <button
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); handleRemoveImage(); }}
-                                className="absolute -top-1 -right-1 bg-red-500/80 hover:bg-red-500 text-white rounded-full p-1 transition-colors"
+                                className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg transition-transform active:scale-90"
+                                title="Supprimer la photo"
                             >
                                 <X size={14} />
                             </button>
                         )}
-
-                        <div className="absolute inset-x-0 -bottom-6 text-center">
-                            <span className="text-xs text-gray-500 group-hover:text-gray-300 transition-colors">
-                                {avatar ? 'Modifier le logo' : 'Ajouter un logo'}
-                            </span>
-                        </div>
                     </div>
+                    <span className="text-xs text-gray-400 mt-3 font-medium">
+                        {avatar ? 'Cliquez pour modifier le logo (PNG, JPG)' : 'Format recommandé : 512x512px (PNG, JPG)'}
+                    </span>
                     <input
                         type="file"
                         ref={fileInputRef}
@@ -85,57 +91,65 @@ export const AddClientModal = ({ isOpen, onClose }) => {
                     />
                 </div>
 
-                <div className="pt-2">
-                    <label className="block text-sm text-gray-400 mb-2">Nom de l'entreprise</label>
-                    <input
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-mv-gold/50 transition-colors"
-                        placeholder="Ex: Maison Éclat"
-                        autoFocus
-                    />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest">
+                            Nom de l'entreprise <span className="text-mv-gold">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className="w-full bg-white/[0.03] border border-white/15 rounded-xl px-4 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:border-mv-gold focus:ring-1 focus:ring-mv-gold/30 transition-all font-medium text-base shadow-inner"
+                            placeholder="Ex: Maison Éclat"
+                            autoFocus
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest">
+                            Email d'invitation <span className="text-gray-500 font-normal">(Optionnel)</span>
+                        </label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="w-full bg-white/[0.03] border border-white/15 rounded-xl px-4 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:border-mv-gold focus:ring-1 focus:ring-mv-gold/30 transition-all font-medium text-base shadow-inner"
+                            placeholder="contact@maisoneclat.com"
+                        />
+                    </div>
                 </div>
 
-                <div>
-                    <label className="block text-sm text-gray-400 mb-2">Email d'invitation (Optionnel)</label>
-                    <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-mv-gold/50 transition-colors"
-                        placeholder="client@exemple.com"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Le client recevra une invitation à rejoindre ses projets sur son espace.</p>
-                </div>
-
-                <div>
-                    <label className="block text-sm text-gray-400 mb-2">Description (Optionnel)</label>
+                <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest">
+                        Description & Remarques <span className="text-gray-500 font-normal">(Optionnel)</span>
+                    </label>
                     <textarea
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
-                        className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-mv-gold/50 transition-colors h-24 resize-none"
-                        placeholder="Notes sur le client..."
+                        className="w-full bg-white/[0.03] border border-white/15 rounded-xl px-4 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:border-mv-gold focus:ring-1 focus:ring-mv-gold/30 transition-all font-medium text-sm h-28 resize-none shadow-inner"
+                        placeholder="Notes internes, contacts clés, préférences de livraison..."
                     />
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4">
+                <div className="flex items-center justify-end gap-4 pt-6 border-t border-white/10">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+                        className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-400 hover:text-white transition-colors rounded-xl"
                     >
                         Annuler
                     </button>
                     <button
                         type="submit"
                         disabled={!name.trim()}
-                        className="px-6 py-2 bg-mv-gold text-black font-medium rounded-lg hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-7 py-3 bg-mv-gold text-black font-bold text-xs uppercase tracking-wider rounded-full hover:bg-white transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(212,175,55,0.2)] active:scale-95"
                     >
-                        Créer
+                        Créer l'entreprise
                     </button>
                 </div>
             </form>
         </Modal>
+
     );
 };

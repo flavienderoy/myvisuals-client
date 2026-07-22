@@ -64,62 +64,77 @@ export const AddProjectModal = ({ isOpen, onClose, initialClient = '', initialCl
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Nouveau Dossier Projet">
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                    <label className="block text-sm text-gray-400 mb-2">Nom du projet</label>
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            title="Nouveau Dossier Projet"
+            subtitle="Créez un nouvel espace de production rattaché à une entreprise client."
+            maxWidth="max-w-2xl"
+        >
+            <form onSubmit={handleSubmit} className="space-y-8">
+                <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest">
+                        Nom du Projet <span className="text-mv-gold">*</span>
+                    </label>
                     <input
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-mv-gold/50 transition-colors"
-                        placeholder="Ex: Campagne Été 2026"
+                        className="w-full bg-white/[0.03] border border-white/15 rounded-xl px-4 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:border-mv-gold focus:ring-1 focus:ring-mv-gold/30 transition-all font-medium text-base shadow-inner"
+                        placeholder="Ex: Campagne Automne-Hiver 2026"
                         autoFocus
                     />
                 </div>
 
-                <div>
-                    <label className="block text-sm text-gray-400 mb-2">Client (Entreprise)</label>
+                <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest">
+                        Entreprise Client <span className="text-mv-gold">*</span>
+                    </label>
                     {clients.length === 0 ? (
-                        <p className="text-sm text-gray-500 bg-black/20 border border-white/10 rounded-lg px-4 py-3">
-                            Aucun client. Créez d'abord une entreprise pour lui rattacher un projet.
-                        </p>
+                        <div className="p-4 bg-white/[0.02] border border-white/10 rounded-xl text-sm text-gray-400 flex items-center justify-between">
+                            <span>Aucune entreprise disponible. Créez d'abord une entreprise client.</span>
+                        </div>
                     ) : (
-                        <select
-                            value={clientId}
-                            onChange={(e) => setClientId(e.target.value)}
-                            disabled={locked}
-                            className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-mv-gold/50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed appearance-none"
-                        >
-                            <option value="" disabled>Sélectionner un client…</option>
-                            {clients.map((c) => (
-                                <option key={c.id} value={c.id}>
-                                    {c.name}
-                                    {c.inviteStatus === 'accepted' ? ' ✓ (lié)' : c.email ? ' ✉ (invité)' : ''}
-                                </option>
-                            ))}
-                        </select>
+                        <div className="relative">
+                            <select
+                                value={clientId}
+                                onChange={(e) => setClientId(e.target.value)}
+                                disabled={locked}
+                                className="w-full bg-white/[0.03] border border-white/15 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-mv-gold focus:ring-1 focus:ring-mv-gold/30 transition-all disabled:opacity-60 disabled:cursor-not-allowed appearance-none font-medium text-base cursor-pointer"
+                            >
+                                <option value="" disabled className="bg-zinc-900 text-gray-400">Sélectionner une entreprise client…</option>
+                                {clients.map((c) => (
+                                    <option key={c.id} value={c.id} className="bg-zinc-900 text-white py-2">
+                                        {c.name} {c.inviteStatus === 'accepted' ? '✓ (Compte actif)' : c.email ? '✉ (Invité)' : ''}
+                                    </option>
+                                ))}
+                            </select>
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                ▾
+                            </div>
+                        </div>
                     )}
                     {renderClientStatus()}
                 </div>
 
-                <div className="flex justify-end gap-3 pt-2">
+                <div className="flex items-center justify-end gap-4 pt-6 border-t border-white/10">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+                        className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-400 hover:text-white transition-colors rounded-xl"
                     >
                         Annuler
                     </button>
                     <button
                         type="submit"
                         disabled={!name.trim() || !clientId}
-                        className="px-6 py-2 bg-mv-gold text-black font-medium rounded-lg hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-7 py-3 bg-mv-gold text-black font-bold text-xs uppercase tracking-wider rounded-full hover:bg-white transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(212,175,55,0.2)] active:scale-95"
                     >
-                        Créer le dossier
+                        Créer le Projet
                     </button>
                 </div>
             </form>
         </Modal>
+
     );
 };
