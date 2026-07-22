@@ -3,6 +3,7 @@ import { Users, Mail, Shield, UserX, Loader2, Plus } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { teamService } from '../../services/teamService';
 import { useToast } from '../../hooks/useToast';
+import { Modal } from '../../components/common/Modal';
 
 export const TeamSettings = () => {
     const { currentUser } = useData();
@@ -16,8 +17,9 @@ export const TeamSettings = () => {
     const [role, setRole] = useState('member');
     const [inviting, setInviting] = useState(false);
 
-    // Only the owner can manage the team
-    const isOwner = currentUser?.studio?.isOwner;
+    // Studio owner or admin check
+    const isOwner = currentUser?.studio?.isOwner ?? (currentUser?.role === 'studio');
+    const canManageTeam = isOwner || currentUser?.studio?.role === 'admin';
 
     useEffect(() => {
         loadTeam();
@@ -27,7 +29,7 @@ export const TeamSettings = () => {
         try {
             setLoading(true);
             const data = await teamService.getTeamMembers();
-            setMembers(data);
+            setMembers(data || []);
         } catch (e) {
             toast.error("Impossible de charger l'équipe");
         } finally {
@@ -41,8 +43,8 @@ export const TeamSettings = () => {
 
         try {
             setInviting(true);
-            const newMember = await teamService.inviteMember({ email, role });
-            setMembers([...members, newMember]);
+            await teamService.inviteMember({ email: email.trim(), role });
+            await loadTeam();
             setShowInvite(false);
             setEmail('');
             setRole('member');
@@ -58,7 +60,7 @@ export const TeamSettings = () => {
         if (!confirm("Retirer cet utilisateur de l'équipe ?")) return;
         try {
             await teamService.removeMember(id);
-            setMembers(members.filter(m => m.id !== id));
+            setMembers(prev => prev.filter(m => m.id !== id));
             toast.success("Membre retiré");
         } catch (e) {
             toast.error("Erreur lors du retrait");
@@ -83,75 +85,83 @@ export const TeamSettings = () => {
                     </h1>
                     <p className="text-gray-400">Gérez les membres de votre studio et leurs accès aux projets.</p>
                 </div>
-                { (isOwner || currentUser?.studio?.role === 'admin') && (
+                { canManageTeam && (
                     <button 
                         onClick={() => setShowInvite(true)}
-                        className="bg-mv-gold text-black px-4 py-2.5 rounded-lg font-bold hover:bg-white transition-colors flex items-center gap-2 shadow-[0_0_15px_rgba(212,175,55,0.3)] hover:shadow-[0_0_20px_rgba(255,255,255,0.5)]"
+                        className="bg-mv-gold text-black px-5 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider hover:bg-white transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(212,175,55,0.3)] active:scale-95"
                     >
-                        <Plus size={18} />
+                        <Plus size={16} />
                         Ajouter un membre
                     </button>
                 )}
             </div>
 
             {/* Invite Modal */}
-            {showInvite && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                    <div className="bg-[#141414] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-                        <h2 className="text-xl font-bold text-white mb-4">Ajouter à l'équipe</h2>
-                        <p className="text-sm text-gray-400 mb-6">L'utilisateur doit déjà avoir un compte sur Visuals.co pour être ajouté à votre espace.</p>
-                        
-                        <form onSubmit={handleInvite} className="space-y-4">
-                            <div>
-                                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Email du collaborateur</label>
-                                <div className="relative">
-                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
-                                    <input 
-                                        type="email" 
-                                        required
-                                        value={email}
-                                        onChange={e => setEmail(e.target.value)}
-                                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-mv-gold/50 transition-colors"
-                                        placeholder="freelance@email.com"
-                                    />
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Rôle</label>
-                                <div className="relative">
-                                    <Shield className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
-                                    <select 
-                                        value={role}
-                                        onChange={e => setRole(e.target.value)}
-                                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-white focus:outline-none focus:border-mv-gold/50 transition-colors appearance-none"
-                                    >
-                                        <option value="member">Membre (Accès Projets)</option>
-                                        <option value="admin">Admin (Gestion d'équipe)</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <div className="flex gap-3 pt-2">
-                                <button 
-                                    type="button"
-                                    onClick={() => setShowInvite(false)}
-                                    className="flex-1 py-2.5 rounded-lg border border-white/10 text-gray-300 hover:bg-white/5 transition-colors"
-                                >
-                                    Annuler
-                                </button>
-                                <button 
-                                    type="submit"
-                                    disabled={inviting || !email}
-                                    className="flex-1 py-2.5 rounded-lg bg-mv-gold text-black font-bold hover:bg-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                                >
-                                    {inviting ? <Loader2 size={18} className="animate-spin" /> : 'Ajouter'}
-                                </button>
-                            </div>
-                        </form>
+            <Modal
+                isOpen={showInvite}
+                onClose={() => setShowInvite(false)}
+                title="Ajouter un Membre à l'Équipe"
+                subtitle="L'utilisateur doit déjà avoir un compte sur Visuals.co."
+                maxWidth="max-w-md"
+            >
+                <form onSubmit={handleInvite} className="space-y-6">
+                    <div className="space-y-2">
+                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest">
+                            Email du collaborateur
+                        </label>
+                        <div className="relative">
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+                            <input 
+                                type="email" 
+                                required
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                                className="w-full bg-white/[0.03] border border-white/15 rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-mv-gold focus:ring-1 focus:ring-mv-gold/30 transition-all font-medium text-sm"
+                                placeholder="freelance@email.com"
+                                autoFocus
+                            />
+                        </div>
                     </div>
-                </div>
-            )}
+                    
+                    <div className="space-y-2">
+                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest">
+                            Rôle attribué
+                        </label>
+                        <div className="relative">
+                            <Shield className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+                            <select 
+                                value={role}
+                                onChange={e => setRole(e.target.value)}
+                                className="w-full bg-white/[0.03] border border-white/15 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-mv-gold focus:ring-1 focus:ring-mv-gold/30 transition-all appearance-none font-medium text-sm cursor-pointer"
+                            >
+                                <option value="member" className="bg-zinc-900 text-white">Membre (Accès Projets)</option>
+                                <option value="admin" className="bg-zinc-900 text-white">Admin (Gestion d'équipe)</option>
+                            </select>
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                ▾
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+                        <button 
+                            type="button"
+                            onClick={() => setShowInvite(false)}
+                            className="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider hover:text-white transition-colors"
+                        >
+                            Annuler
+                        </button>
+                        <button 
+                            type="submit"
+                            disabled={inviting || !email}
+                            className="px-6 py-2.5 rounded-full bg-mv-gold text-black text-xs uppercase tracking-wider font-bold hover:bg-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(212,175,55,0.2)]"
+                        >
+                            {inviting ? <Loader2 size={16} className="animate-spin" /> : 'Ajouter'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+
 
             {/* Members List */}
             <div className="bg-[#141414] border border-white/10 rounded-xl overflow-hidden">
