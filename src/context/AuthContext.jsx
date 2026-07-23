@@ -40,10 +40,14 @@ export const AuthProvider = ({ children }) => {
 
     const value = {
         signUp: async (data) => {
+            // Build an explicit payload — no spread — to guarantee field clarity
             const payload = {
                 email: data.email,
                 password: data.password,
-                ...data.options?.data
+                name: data.options?.data?.name || '',
+                role: data.options?.data?.role || 'client',
+                siret: data.options?.data?.siret || null,
+                organization: data.options?.data?.organization || null,
             };
             const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/register`, {
                 method: 'POST',
