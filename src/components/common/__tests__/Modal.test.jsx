@@ -68,8 +68,8 @@ describe('Modal Component', () => {
 
     it('should call onClose when backdrop is clicked', () => {
         render(<Modal isOpen={true} onClose={onClose} title="Test" />);
-        // The backdrop is the first child div with bg-black/60
-        const backdrop = document.querySelector('.bg-black\\/60');
+        // The backdrop is the first child div with bg-black/80
+        const backdrop = document.querySelector('.bg-black\\/80');
         if (backdrop) fireEvent.click(backdrop);
         expect(onClose).toHaveBeenCalled();
     });

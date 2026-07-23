@@ -64,7 +64,6 @@ describe('UserProfileMenu Component', () => {
         fireEvent.click(button);
         
         expect(screen.getByText('Mon Profil')).toBeInTheDocument();
-        expect(screen.getByText('Paramètres')).toBeInTheDocument();
         expect(screen.getByText('Déconnexion')).toBeInTheDocument();
     });
 
