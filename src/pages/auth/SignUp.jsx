@@ -12,7 +12,7 @@ const SignUp = () => {
     const [role, setRole] = useState('client');
     const [siret, setSiret] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const { signUp } = useAuth();
+    const { signUp, signIn } = useAuth();
     const toast = useToast();
     const navigate = useNavigate();
 
@@ -36,6 +36,9 @@ const SignUp = () => {
         setIsLoading(true);
         try {
             await signUp({ email, password, options: { data: { name, role, siret: role === 'studio' ? siret : null } } });
+            // Automatically sign in the user to obtain a valid session before navigating
+            await signIn({ email, password });
+            
             toast.success("Inscription réussie !");
             navigate(role === 'studio' ? '/studio' : '/client/projects');
         } catch (error) {
