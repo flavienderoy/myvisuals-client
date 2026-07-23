@@ -1,13 +1,15 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useData } from '../../context/DataContext';
 import { Loader } from '../common/Loader';
 
 export const ProtectedRoute = ({ children, redirectTo = '/login', studioOnly = false }) => {
-    const { user, loading } = useAuth();
+    const { user, loading: authLoading } = useAuth();
+    const { currentUser, loadingData } = useData();
     const location = useLocation();
 
-    if (loading) {
+    if (authLoading || (user && loadingData)) {
         return <Loader onComplete={() => {}} />;
     }
 
@@ -16,9 +18,9 @@ export const ProtectedRoute = ({ children, redirectTo = '/login', studioOnly = f
     }
 
     // RBAC — a client can never load the studio management routes.
-    // Only an *explicit* client role is blocked (legacy studio accounts may
-    // have no role metadata and must keep their access).
-    if (studioOnly && user.user_metadata?.role === 'client') {
+    // We check currentUser from DataContext first as it reflects the DB profile.
+    const role = currentUser?.role || user.user_metadata?.role || 'client';
+    if (studioOnly && role === 'client') {
         return <Navigate to="/client/dashboard" replace />;
     }
 

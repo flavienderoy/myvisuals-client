@@ -3,9 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { Toaster } from 'react-hot-toast';
 import { MainLayout } from './layouts/MainLayout';
 import { ClientLayout } from './layouts/ClientLayout';
-import { ShowroomLayout } from './layouts/ShowroomLayout';
+
 import Studio from './pages/Studio';
-import Showroom from './pages/Showroom';
+
 import AssetViewer from './pages/AssetViewer';
 import Messages from './pages/Messages';
 import SignIn from './pages/auth/SignIn';
@@ -89,11 +89,7 @@ function App() {
               </AppLayout>
             } />
 
-            <Route path="/showroom/:id" element={
-              <ShowroomLayout>
-                <Showroom />
-              </ShowroomLayout>
-            } />
+
 
             {/* Full-screen asset viewer (studio & client) */}
             <Route path="/assets/:id" element={

@@ -52,7 +52,8 @@ export const AuthProvider = ({ children }) => {
             });
             const result = await response.json();
             if (!response.ok) {
-                throw new Error(result.error || result.details || "Erreur lors de l'inscription");
+                const errorMessage = result.details ? `${result.error} (${result.details})` : (result.error || "Erreur lors de l'inscription");
+                throw new Error(errorMessage);
             }
             return result;
         },

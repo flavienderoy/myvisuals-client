@@ -44,7 +44,7 @@ const PricingSection = () => {
                         </div>
 
                         <ul className="flex flex-col space-y-4 mb-10 flex-1">
-                            {['1 Studio Workspace', '5 Showrooms actifs', 'Stockage Pro (500 Go)', 'Qualité Vidéo HD (1080p)', 'Support Email'].map((feature, idx) => (
+                            {['1 Studio Workspace', '5 Projets actifs', 'Stockage Pro (500 Go)', 'Qualité Vidéo HD (1080p)', 'Support Email'].map((feature, idx) => (
                                 <li key={idx} className="flex items-center space-x-3 text-sm text-white/80">
                                     <Check className="w-5 h-5 text-[#D4AF37] shrink-0" />
                                     <span>{feature}</span>
@@ -83,7 +83,7 @@ const PricingSection = () => {
                         </div>
 
                         <ul className="flex flex-col space-y-4 mb-10 flex-1 relative z-10">
-                            {['Showrooms illimités', 'Comparateur "Diff Visuals"', 'Validation & Annotations Vidéo', 'Branding Studio Personnalisé (Marque Blanche)', 'Qualité Vidéo 4K', 'Stockage Étendu (2 To)'].map((feature, idx) => (
+                            {['Projets illimités', 'Comparateur "Diff Visuals"', 'Validation & Annotations Vidéo', 'Branding Studio Personnalisé (Marque Blanche)', 'Qualité Vidéo 4K', 'Stockage Étendu (2 To)'].map((feature, idx) => (
                                 <li key={idx} className="flex items-start space-x-3 text-sm text-white/90">
                                     <Check className="w-5 h-5 text-[#D4AF37] shrink-0 mt-0.5" strokeWidth={3} />
                                     <span className="font-medium">{feature}</span>

@@ -99,14 +99,7 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
                                 <Settings size={18} />
                             </button>
 
-                            <button
-                                onClick={() => window.open(`/showroom/${project.id}`, '_blank')}
-                                className="w-10 h-10 flex items-center justify-center rounded-full border border-white/10 text-gray-400 hover:text-white hover:border-mv-gold hover:bg-white/5 transition-colors"
-                                title="Ouvrir le Showroom de livraison"
-                                aria-label="Showroom"
-                            >
-                                <Monitor size={18} />
-                            </button>
+
 
                             <button
                                 onClick={() => setIsShareOpen(true)}

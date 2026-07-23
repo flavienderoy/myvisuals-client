@@ -4,6 +4,7 @@ import { Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
 import { useNavigate, Link } from 'react-router-dom';
+import { supabase } from '../../supabaseClient';
 
 const SignIn = () => {
     const [email, setEmail] = useState('');
@@ -18,7 +19,15 @@ const SignIn = () => {
         setIsLoading(true);
         try {
             const data = await signIn({ email, password });
-            const userRole = data?.user?.user_metadata?.role || 'client';
+            
+            // Fetch profile to get the authoritative role from the database
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', data.user.id)
+                .single();
+                
+            const userRole = profile?.role || data?.user?.user_metadata?.role || 'client';
             
             toast.success("Connexion réussie");
             if (userRole === 'studio') {

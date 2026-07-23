@@ -39,7 +39,6 @@ const ImmersiveFooter = () => {
                         <div>
                             <h4 className="text-white font-semibold mb-6">Produit</h4>
                             <ul className="space-y-4">
-                                <li><a href="#showroom" className="text-sm text-white/50 hover:text-[#D4AF37] transition-colors">Showroom</a></li>
                                 <li><a href="#collaboration" className="text-sm text-white/50 hover:text-[#D4AF37] transition-colors">Comparateur Diff</a></li>
                                 <li><a href="#collaboration" className="text-sm text-white/50 hover:text-[#D4AF37] transition-colors">Espaces Clients</a></li>
                                 <li><a href="#pricing" className="text-sm text-white/50 hover:text-[#D4AF37] transition-colors">Tarifs</a></li>

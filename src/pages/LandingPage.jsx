@@ -6,7 +6,7 @@ import BrandLogo from '../components/common/BrandLogo';
 import Reveal from '../components/landing/Reveal';
 import LandingBackground from '../components/landing/LandingBackground';
 import FeaturesGrid from '../components/landing/FeaturesGrid';
-import ShowroomSection from '../components/landing/ShowroomSection';
+
 import CollaborationSection from '../components/landing/CollaborationSection';
 import PricingSection from '../components/landing/PricingSection';
 import FaqSection from '../components/landing/FaqSection';
@@ -108,7 +108,7 @@ const LandingPage = () => {
                         {/* Center: Main links */}
                         <div className="hidden md:flex items-center space-x-8">
                             <a href="#features" onClick={(e) => { e.preventDefault(); document.querySelector('#features').scrollIntoView({ behavior: 'smooth' }); }} className="text-sm font-medium text-white/80 hover:text-white transition-colors">Fonctionnalités</a>
-                            <a href="#showroom" onClick={(e) => { e.preventDefault(); document.querySelector('#showroom').scrollIntoView({ behavior: 'smooth' }); }} className="text-sm font-medium text-white/80 hover:text-white transition-colors">Le Showroom</a>
+
                             <a href="#collaboration" onClick={(e) => { e.preventDefault(); document.querySelector('#collaboration').scrollIntoView({ behavior: 'smooth' }); }} className="text-sm font-medium text-white/80 hover:text-white transition-colors">Espace Client (B2B)</a>
                             <a href="#pricing" onClick={(e) => { e.preventDefault(); document.querySelector('#pricing').scrollIntoView({ behavior: 'smooth' }); }} className="text-sm font-medium text-white/80 hover:text-white transition-colors">Tarifs</a>
                         </div>
@@ -187,15 +187,7 @@ const LandingPage = () => {
                                             Essai Gratuit
                                         </button>
 
-                                        <button
-                                            onClick={(e) => { e.preventDefault(); document.querySelector('#showroom').scrollIntoView({ behavior: 'smooth' }); }}
-                                            className="w-full sm:w-auto px-8 py-4 landing-glass text-white text-base font-semibold rounded-xl hover:bg-white/10 transition-all duration-300 flex items-center justify-center space-x-2 group"
-                                        >
-                                            <div className="bg-white text-black rounded-full p-1 group-hover:scale-110 transition-transform">
-                                                <Play className="w-4 h-4 fill-current" />
-                                            </div>
-                                            <span>Explorer le Showroom Demo</span>
-                                        </button>
+
                                     </div>
                                 </Reveal>
                             </div>
@@ -236,10 +228,7 @@ const LandingPage = () => {
                                             <Image className="w-4 h-4 text-white/50 group-hover:text-white/80 transition-colors" />
                                             <span className="text-sm font-medium text-white/70 group-hover:text-white/90 transition-colors">Bibliothèque</span>
                                         </div>
-                                        <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white/5 transition-colors group cursor-pointer">
-                                            <Layout className="w-4 h-4 text-white/50 group-hover:text-white/80 transition-colors" />
-                                            <span className="text-sm font-medium text-white/70 group-hover:text-white/90 transition-colors">Showrooms</span>
-                                        </div>
+
                                         <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white/5 transition-colors group cursor-pointer">
                                             <Users className="w-4 h-4 text-white/50 group-hover:text-white/80 transition-colors" />
                                             <span className="text-sm font-medium text-white/70 group-hover:text-white/90 transition-colors">Équipe</span>
@@ -346,10 +335,7 @@ const LandingPage = () => {
                     <FeaturesGrid />
                 </div>
 
-                {/* Section 3: The Showroom Delivery & Payment Checkout */}
-                <div className="relative z-40 bg-transparent">
-                    <ShowroomSection />
-                </div>
+
 
                 {/* Section 4: The Client Portal & B2B Collaboration */}
                 <div className="relative z-40 bg-transparent">

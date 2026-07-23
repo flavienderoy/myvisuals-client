@@ -4,16 +4,16 @@ import Reveal from './Reveal';
 
 const faqs = [
     {
-        question: "Mes clients ont-ils besoin d'un compte pour voir le Showroom ?",
-        answer: "Non, vos clients accèdent à leur espace via un lien sécurisé et immersif, sans aucune barrière technique."
+        question: "Mes clients ont-ils besoin d'un compte pour accéder aux livrables ?",
+        answer: "Oui, vos clients accèdent à leur espace collaboratif via une invitation sécurisée."
     },
     {
         question: "Quelle est la limite de taille pour les fichiers vidéo RAW ?",
         answer: "MyVisuals est conçu pour la haute performance. Nous supportons les flux 4K et les fichiers volumineux avec une lecture fluide via HLS."
     },
     {
-        question: "Puis-je personnaliser le Showroom avec ma propre marque ?",
-        answer: "Absolument. Votre logo, vos couleurs et votre domaine personnalisé sont intégrés pour que l'expérience soit 100% la vôtre."
+        question: "Puis-je personnaliser l'espace de livraison avec ma propre marque ?",
+        answer: "Absolument. Votre logo et vos couleurs sont intégrés pour que l'expérience soit 100% la vôtre."
     }
 ];
 
