@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useData } from '../../context/DataContext';
 import { LuxuryTitle } from '../common/LuxuryTitle';
-import { Plus, LayoutGrid, Clock, CheckCircle } from 'lucide-react';
+import { Plus, LayoutGrid, Clock, CheckCircle, Settings } from 'lucide-react';
 import { ProjectSlider } from './ProjectSlider';
 import { AddProjectModal } from './modals/AddProjectModal';
+import { EditClientModal } from './modals/EditClientModal';
 
 export const ClientOverview = ({ clientName }) => {
     const { projects, selectProject, clients } = useData();
     const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+    const [isEditClientModalOpen, setIsEditClientModalOpen] = useState(false);
 
     // Find client object
     const client = clients.find(c => c.name === clientName);
@@ -27,14 +29,22 @@ export const ClientOverview = ({ clientName }) => {
                 <div>
                     <h2 className="text-gray-500 text-sm font-bold uppercase tracking-widest mb-2">Espace Client</h2>
                     <div className="flex items-center gap-4">
-                        {client?.avatar ? (
-                            <img src={client.avatar} alt={clientName} className="w-16 h-16 rounded-full object-cover border-2 border-white/10" />
+                        {client?.logo ? (
+                            <img src={client.logo} alt={clientName} className="w-16 h-16 rounded-full object-cover border-2 border-white/10" />
                         ) : (
                             <div className="w-16 h-16 rounded-full bg-mv-gold text-black flex items-center justify-center text-3xl font-bold shadow-lg border-2 border-white/10">
                                 {clientName.charAt(0)}
                             </div>
                         )}
                         <LuxuryTitle text={clientName} size="text-5xl" className="text-white" />
+                        
+                        <button
+                            onClick={() => setIsEditClientModalOpen(true)}
+                            className="ml-4 p-2 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full transition-colors"
+                            title="Modifier l'entreprise"
+                        >
+                            <Settings size={20} />
+                        </button>
                     </div>
                 </div>
                 <button
@@ -95,6 +105,12 @@ export const ClientOverview = ({ clientName }) => {
                 isOpen={isProjectModalOpen}
                 onClose={() => setIsProjectModalOpen(false)}
                 initialClientId={client?.id}
+            />
+
+            <EditClientModal
+                isOpen={isEditClientModalOpen}
+                onClose={() => setIsEditClientModalOpen(false)}
+                client={client}
             />
         </div>
     );

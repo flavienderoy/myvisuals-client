@@ -248,6 +248,40 @@ export const DataProvider = ({ children }) => {
         }
     };
 
+    const updateClient = async (clientId, updates) => {
+        try {
+            const apiUpdates = {
+                name: updates.name,
+                description: updates.description,
+                avatar_url: updates.avatar,
+                email: updates.email
+            };
+            const updatedApiObj = await clientService.updateClient(clientId, apiUpdates);
+            
+            const updatedClient = {
+                id: updatedApiObj.id,
+                name: updatedApiObj.name,
+                description: updatedApiObj.description,
+                logo: updatedApiObj.avatar_url,
+                email: updatedApiObj.email,
+                inviteStatus: updatedApiObj.invite_status
+            };
+
+            setClients(prev => prev.map(c => c.id === clientId ? updatedClient : c));
+            
+            if (currentSelection.type === 'client' && currentSelection.id !== updatedClient.name) {
+                // If name changed and it's the currently selected client, update selection
+                setCurrentSelection({ type: 'client', id: updatedClient.name });
+            }
+            
+            toast.success(`Entreprise mise à jour`);
+            return updatedClient;
+        } catch(e) {
+            toast.error("Impossible de mettre à jour l'entreprise");
+            throw e;
+        }
+    };
+
     const addProject = async (projectData) => {
         try {
             // Prefer an explicit client id (robust); fall back to name resolution
@@ -376,6 +410,7 @@ export const DataProvider = ({ children }) => {
         clients,
         loadingData,
         addClient,
+        updateClient,
         addProject,
         updateProject,
         addAsset,

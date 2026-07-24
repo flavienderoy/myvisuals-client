@@ -68,7 +68,7 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
             </div>
 
             {/* Header */}
-            <div className="flex items-center gap-4 mb-2">
+            <div className="flex flex-col md:flex-row md:items-center gap-4 mb-2">
                 <button
                     onClick={onBack}
                     className="w-8 h-8 flex items-center justify-center rounded-full border border-white/10 text-gray-400 hover:text-white hover:border-mv-gold transition-colors"
@@ -87,7 +87,7 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                     {!isClient && (
                         <>
                             <button
@@ -131,7 +131,7 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
             </div>
 
             {/* Compact brief line — description + key facts, no dedicated tab */}
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-gray-500 mb-6 pl-12">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-500 mb-6 md:pl-12">
                 {project.description && <span className="text-gray-400 truncate max-w-xl">{project.description}</span>}
                 <span className="shrink-0">Échéance : <span className="text-gray-300">{project.date || '—'}</span></span>
                 <span className="shrink-0 tabular-nums">{assets.length} fichier{assets.length > 1 ? 's' : ''}</span>
@@ -144,7 +144,7 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
             </div>
 
             {/* Workspace Tabs */}
-            <div className="flex items-center gap-8 border-b border-white/10 mb-8">
+            <div className="flex items-center gap-4 md:gap-8 border-b border-white/10 mb-4 md:mb-8 overflow-x-auto pb-1 scrollbar-hide">
                 <button
                     onClick={() => setActiveTab('production')}
                     className={`pb-3 text-sm font-medium tracking-widest uppercase transition-colors relative ${activeTab === 'production' ? 'text-mv-gold' : 'text-gray-500 hover:text-gray-300'}`}
@@ -186,7 +186,7 @@ export const ProjectDetail = ({ project, onBack, onAddAsset, isClient = false })
                 {activeTab === 'delivery' && (
                     <div className="animate-fade-in max-w-6xl mx-auto space-y-8">
                         {/* Delivery Console */}
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center relative overflow-hidden">
+                        <div className="bg-white/5 border border-white/10 rounded-xl p-4 md:p-8 text-center relative overflow-hidden">
                             <Package size={48} className="mx-auto text-white/50 mb-6" />
 
                             <h3 className="text-2xl text-white font-bold tracking-tight mb-2">Console de Livraison</h3>

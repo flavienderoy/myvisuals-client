@@ -7,6 +7,11 @@ export const Modal = ({ isOpen, onClose, title, subtitle, children, maxWidth = "
     const modalRef = useRef(null);
     const previousFocusRef = useRef(null);
 
+    const onCloseRef = useRef(onClose);
+    useEffect(() => {
+        onCloseRef.current = onClose;
+    }, [onClose]);
+
     useEffect(() => {
         if (isOpen) {
             previousFocusRef.current = document.activeElement;
@@ -17,7 +22,7 @@ export const Modal = ({ isOpen, onClose, title, subtitle, children, maxWidth = "
             }, 100);
 
             const handleEscape = (e) => {
-                if (e.key === 'Escape') onClose();
+                if (e.key === 'Escape') onCloseRef.current();
             };
             document.addEventListener('keydown', handleEscape);
 
@@ -27,7 +32,7 @@ export const Modal = ({ isOpen, onClose, title, subtitle, children, maxWidth = "
                 previousFocusRef.current?.focus();
             };
         }
-    }, [isOpen, onClose]);
+    }, [isOpen]);
 
     return createPortal(
         <AnimatePresence>
@@ -75,7 +80,7 @@ export const Modal = ({ isOpen, onClose, title, subtitle, children, maxWidth = "
                         </div>
 
                         {/* Body */}
-                        <div className="p-8">
+                        <div className="p-5 md:p-8">
                             {children}
                         </div>
                     </motion.div>

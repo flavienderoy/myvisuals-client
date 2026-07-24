@@ -14,7 +14,6 @@ import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
 import Profile from './pages/profile/Profile';
 import { TeamSettings } from './pages/dashboard/TeamSettings';
-import { Loader } from './components/common/Loader';
 import { DataProvider } from './context/DataContext';
 import { AuthProvider } from './context/AuthContext';
 import LandingPage from './pages/LandingPage';
@@ -40,12 +39,6 @@ const AppLayout = ({ children }) => {
 };
 
 function App() {
-  const [loading, setLoading] = useState(true);
-
-  if (loading) {
-    return <Loader onComplete={() => setLoading(false)} />;
-  }
-
   return (
     <Router>
       <AuthProvider>

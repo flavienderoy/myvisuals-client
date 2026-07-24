@@ -113,7 +113,7 @@ export const Dashboard = () => {
     }).filter(Boolean);
 
     return (
-        <div className="space-y-12 animate-fade-in overflow-hidden p-8">
+        <div className="space-y-12 animate-fade-in overflow-hidden p-4 md:p-8">
             {/* Header Title & Unified Controls */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-2 border-b border-white/10">
                 <div>
@@ -211,7 +211,7 @@ export const Dashboard = () => {
             <SmartFolderList onApplyFolder={handleApplySmartFolder} />
 
             {/* Operational counters — real data, no vanity metrics */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-xl p-5">
                     <div className="p-2.5 rounded-lg bg-white/5 text-mv-gold"><FolderOpen size={20} /></div>
                     <div>

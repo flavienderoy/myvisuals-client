@@ -2,7 +2,6 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
-import { Loader } from '../common/Loader';
 
 export const ProtectedRoute = ({ children, redirectTo = '/login', studioOnly = false }) => {
     const { user, loading: authLoading } = useAuth();
@@ -10,7 +9,7 @@ export const ProtectedRoute = ({ children, redirectTo = '/login', studioOnly = f
     const location = useLocation();
 
     if (authLoading || (user && loadingData)) {
-        return <Loader onComplete={() => {}} />;
+        return <div className="h-screen w-screen bg-[#0a0a0a] flex items-center justify-center text-gray-500 text-sm tracking-widest uppercase">Chargement...</div>;
     }
 
     if (!user) {

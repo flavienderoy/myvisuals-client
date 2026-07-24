@@ -169,8 +169,8 @@ export const Sidebar = () => {
                                         {currentSelection?.type === 'client' ? (
                                             (() => {
                                                 const selectedClient = clients.find(c => c.name === currentSelection.id);
-                                                return selectedClient?.avatar ? (
-                                                    <img src={selectedClient.avatar} alt={selectedClient.name} className="w-5 h-5 rounded-full object-cover" />
+                                                return selectedClient?.logo ? (
+                                                    <img src={selectedClient.logo} alt={selectedClient.name} className="w-5 h-5 rounded-full object-cover" />
                                                 ) : (
                                                     <div className="w-5 h-5 rounded-full bg-mv-gold text-black flex items-center justify-center text-[10px] font-bold">
                                                         {(currentSelection.id || '?').charAt(0)}
@@ -201,8 +201,8 @@ export const Sidebar = () => {
                                             `}
                                             >
 
-                                                {client.avatar ? (
-                                                    <img src={client.avatar} alt={client.name} className="w-5 h-5 rounded-full object-cover" />
+                                                {client.logo ? (
+                                                    <img src={client.logo} alt={client.name} className="w-5 h-5 rounded-full object-cover" />
                                                 ) : (
                                                     <div className="w-5 h-5 rounded-full bg-mv-gold text-black flex items-center justify-center text-[10px] font-bold shrink-0">
                                                         {client.name.charAt(0)}
