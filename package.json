@@ -1,7 +1,7 @@
 {
   "name": "myvisuals",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.8.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,6 +15,7 @@
     "format": "prettier --write 'src/**/*.{js,jsx,json,css,md}' --ignore-path .gitignore"
   },
   "dependencies": {
+    "@sentry/react": "^10.70.0",
     "@supabase/supabase-js": "^2.98.0",
     "axios": "^1.13.6",
     "framer-motion": "^12.29.3",

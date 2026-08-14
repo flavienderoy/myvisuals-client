@@ -98,10 +98,10 @@ const LandingPage = () => {
                 <LandingBackground />
 
                 {/* Smart Navigation (Global z-index) */}
-                <nav className="fixed top-0 left-0 right-0 z-[100] w-full px-6 py-4 pointer-events-auto">
-                    <div className="max-w-7xl mx-auto landing-glass rounded-2xl px-6 py-3 flex items-center justify-between">
+                <nav className="fixed top-0 left-0 right-0 z-[100] w-full px-3 sm:px-6 py-4 pointer-events-auto">
+                    <div className="max-w-7xl mx-auto landing-glass rounded-2xl px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2">
                         {/* Left: Logo */}
-                        <div className="flex items-center">
+                        <div className="flex items-center shrink-0">
                             <BrandLogo className="h-6" />
                         </div>
 
@@ -114,16 +114,16 @@ const LandingPage = () => {
                         </div>
 
                         {/* Right: Auth Section */}
-                        <div className="flex items-center space-x-4">
+                        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
                             <button
                                 onClick={() => navigate('/login')}
-                                className="px-4 py-2 text-sm font-medium text-white landing-glass rounded-lg hover:bg-white/10 transition-all"
+                                className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white landing-glass rounded-lg hover:bg-white/10 transition-all whitespace-nowrap"
                             >
                                 Se connecter
                             </button>
                             <button
                                 onClick={() => navigate('/signup')}
-                                className="px-4 py-2 text-sm font-medium bg-white text-black rounded-lg hover:bg-white/90 transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+                                className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium bg-white text-black rounded-lg hover:bg-white/90 transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)] whitespace-nowrap"
                             >
                                 S'inscrire
                             </button>

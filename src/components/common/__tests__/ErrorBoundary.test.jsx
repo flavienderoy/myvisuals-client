@@ -67,4 +67,41 @@ describe('ErrorBoundary Component', () => {
         );
         expect(screen.getByText(/erreur inattendue/)).toBeInTheDocument();
     });
+
+    // ─── Traçabilité des anomalies ─────────────────────────
+    // Ces trois tests protègent la chaîne support → consignation → correction.
+    // @see docs/PROCESSUS_ANOMALIES.md
+
+    it('should display a copyable incident reference', () => {
+        render(
+            <ErrorBoundary>
+                <ThrowError shouldThrow={true} />
+            </ErrorBoundary>
+        );
+        // Sans référence affichée, un signalement utilisateur ne peut pas être
+        // rattaché à un événement précis dans le suivi d'erreurs.
+        expect(screen.getByText(/^INC-\d{6}-[A-Z0-9]{5}$/)).toBeInTheDocument();
+    });
+
+    it('should not claim the team was notified when monitoring is disabled', () => {
+        render(
+            <ErrorBoundary>
+                <ThrowError shouldThrow={true} />
+            </ErrorBoundary>
+        );
+        // Sans DSN configuré (cas des tests), aucune notification n'est émise :
+        // le message ne doit pas promettre une prise en charge inexistante.
+        expect(screen.queryByText(/transmis automatiquement/)).not.toBeInTheDocument();
+        expect(screen.getByText(/référence ci-dessous au support/)).toBeInTheDocument();
+    });
+
+    it('should clear the incident reference on reset', () => {
+        render(
+            <ErrorBoundary>
+                <ThrowError shouldThrow={false} />
+            </ErrorBoundary>
+        );
+        expect(screen.getByText('Content works')).toBeInTheDocument();
+        expect(screen.queryByText(/^INC-/)).not.toBeInTheDocument();
+    });
 });

@@ -1,33 +1,61 @@
 import React from 'react';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Copy, Check } from 'lucide-react';
+import { captureException, isMonitoringEnabled } from '../../monitoring';
+
+/**
+ * Génère une référence d'incident courte, lisible à l'oral.
+ *
+ * C'est la clé de corrélation côté navigateur : l'utilisateur la communique au
+ * support, qui retrouve l'événement exact dans Sentry sans avoir à deviner
+ * l'horodatage. Elle joue le même rôle que l'en-tête `X-Request-Id` côté API.
+ *
+ * @see docs/PROCESSUS_ANOMALIES.md
+ */
+function buildIncidentRef() {
+    const stamp = new Date().toISOString().slice(2, 10).replace(/-/g, '');
+    const random = Math.random().toString(36).slice(2, 7).toUpperCase();
+    return `INC-${stamp}-${random}`;
+}
 
 export class ErrorBoundary extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { hasError: false, error: null, errorInfo: null };
+        this.state = { hasError: false, error: null, errorInfo: null, incidentRef: null, copied: false };
     }
 
-    static getDerivedStateFromError(error) {
+    static getDerivedStateFromError() {
         return { hasError: true };
     }
 
     componentDidCatch(error, errorInfo) {
-        this.setState({
-            error,
-            errorInfo
-        });
+        const incidentRef = buildIncidentRef();
+        this.setState({ error, errorInfo, incidentRef });
 
-        // Log to console in development
-        if (process.env.NODE_ENV === 'development') {
+        if (import.meta.env.DEV) {
             console.error('ErrorBoundary caught an error:', error, errorInfo);
         }
 
-        // In production, you would send this to an error tracking service
-        // Example: Sentry.captureException(error, { extra: errorInfo });
+        // Remontée à la sonde applicative. Sans DSN configuré, no-op silencieux.
+        captureException(error, {
+            incidentRef,
+            componentStack: errorInfo?.componentStack,
+            route: window.location.pathname,
+        });
     }
 
     handleReset = () => {
-        this.setState({ hasError: false, error: null, errorInfo: null });
+        this.setState({ hasError: false, error: null, errorInfo: null, incidentRef: null, copied: false });
+    };
+
+    handleCopyRef = async () => {
+        try {
+            await navigator.clipboard.writeText(this.state.incidentRef);
+            this.setState({ copied: true });
+            setTimeout(() => this.setState({ copied: false }), 2000);
+        } catch {
+            // Presse-papiers indisponible (contexte non sécurisé, permission
+            // refusée) : la référence reste lisible et recopiable à la main.
+        }
     };
 
     render() {
@@ -43,11 +71,39 @@ export class ErrorBoundary extends React.Component {
                             Oups, quelque chose s'est mal passé
                         </h1>
 
+                        {/*
+                          Le message doit rester exact : annoncer une notification
+                          automatique alors qu'aucune sonde n'est active reviendrait
+                          à promettre une prise en charge qui n'aura pas lieu.
+                        */}
                         <p className="text-gray-400 text-sm mb-6">
-                            Une erreur inattendue s'est produite. Nos équipes ont été notifiées.
+                            Une erreur inattendue s'est produite.{' '}
+                            {isMonitoringEnabled()
+                                ? "L'incident a été transmis automatiquement à notre équipe technique."
+                                : 'Communiquez la référence ci-dessous au support pour que nous puissions intervenir.'}
                         </p>
 
-                        {process.env.NODE_ENV === 'development' && this.state.error && (
+                        {this.state.incidentRef && (
+                            <div className="mb-6">
+                                <p className="text-xs text-gray-500 mb-2">Référence de l'incident</p>
+                                <button
+                                    onClick={this.handleCopyRef}
+                                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-black/50 border border-white/10 hover:border-[#D4AF37]/30 rounded-lg transition-colors group"
+                                    title="Copier la référence"
+                                >
+                                    <code className="text-sm font-mono text-[#D4AF37]">
+                                        {this.state.incidentRef}
+                                    </code>
+                                    {this.state.copied ? (
+                                        <Check size={14} className="text-green-400" />
+                                    ) : (
+                                        <Copy size={14} className="text-gray-500 group-hover:text-white" />
+                                    )}
+                                </button>
+                            </div>
+                        )}
+
+                        {import.meta.env.DEV && this.state.error && (
                             <details className="mb-6 text-left">
                                 <summary className="text-xs text-gray-500 cursor-pointer hover:text-white mb-2">
                                     Détails de l'erreur (dev only)

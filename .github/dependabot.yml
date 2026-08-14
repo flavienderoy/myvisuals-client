@@ -1,0 +1,81 @@
+# ================================================================
+# Mise à jour automatisée des dépendances — myvisuals-client
+# ================================================================
+# Politique complète, critères d'arbitrage et procédure de retour arrière :
+#   https://github.com/flavienderoy/myvisuals-back/blob/main/docs/PROCESSUS_DEPENDANCES.md
+#
+# Principe : Dependabot ouvre les pull requests, la chaîne d'intégration
+# continue les valide (lint → tests → build → E2E → audit), et la décision de
+# fusion reste humaine.
+version: 2
+
+updates:
+  # ─────────────────────────────────────────────────────────────
+  # Dépendances npm de l'application front
+  # ─────────────────────────────────────────────────────────────
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '07:00'
+      timezone: 'Europe/Paris'
+
+    open-pull-requests-limit: 5
+    versioning-strategy: increase
+    labels:
+      - 'dependencies'
+      - 'area:front'
+    commit-message:
+      prefix: 'chore(deps)'
+      prefix-development: 'chore(deps-dev)'
+      include: 'scope'
+
+    groups:
+      production-minor-patch:
+        applies-to: version-updates
+        dependency-type: 'production'
+        update-types: ['minor', 'patch']
+
+      development:
+        applies-to: version-updates
+        dependency-type: 'development'
+        update-types: ['minor', 'patch', 'major']
+
+      security:
+        applies-to: security-updates
+        patterns: ['*']
+
+    ignore:
+      # Montées majeures de production : issue dédiée avec plan de test.
+      - dependency-name: '*'
+        dependency-type: 'production'
+        update-types: ['version-update:semver-major']
+
+      # React est le socle de l'application : une montée majeure impose une
+      # campagne de test complète (rendu, hooks, Suspense) et le passage des
+      # E2E Playwright. Jamais en PR automatique.
+      - dependency-name: 'react'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react-dom'
+        update-types: ['version-update:semver-major']
+
+  # ─────────────────────────────────────────────────────────────
+  # Actions GitHub
+  # ─────────────────────────────────────────────────────────────
+  # Une action compromise s'exécute avec les secrets du dépôt — dont le jeton
+  # de déploiement Vercel.
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'monthly'
+    open-pull-requests-limit: 3
+    labels:
+      - 'dependencies'
+      - 'area:cicd'
+      - 'security'
+    commit-message:
+      prefix: 'chore(ci)'
+    groups:
+      actions:
+        patterns: ['*']

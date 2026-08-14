@@ -18,6 +18,8 @@ export default defineConfig([
       globals: {
         ...globals.browser,
         process: 'readonly',
+        // Injecté au build par `define` dans vite.config.js (version applicative).
+        __APP_VERSION__: 'readonly',
       },
       parserOptions: {
         ecmaVersion: 'latest',
