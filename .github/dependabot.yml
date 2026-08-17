@@ -27,8 +27,9 @@ updates:
       - 'dependencies'
       - 'area:front'
     commit-message:
-      prefix: 'chore(deps)'
-      prefix-development: 'chore(deps-dev)'
+      # prefix 'chore' + include 'scope' → « chore(deps): … » / « chore(deps-dev): … ».
+      # Un prefix 'chore(deps)' combiné au scope produisait « chore(deps)(deps): ».
+      prefix: 'chore'
       include: 'scope'
 
     groups:
@@ -47,17 +48,43 @@ updates:
         patterns: ['*']
 
     ignore:
-      # Montées majeures de production : issue dédiée avec plan de test.
-      - dependency-name: '*'
-        dependency-type: 'production'
+      # Les montées MAJEURES des dépendances de production ne passent jamais par
+      # une pull request automatique : elles impliquent des changements
+      # incompatibles à évaluer, et passent par une issue dédiée avec plan de
+      # test (§ 4.3 du processus).
+      #
+      # Les dépendances sont énumérées nommément : le schéma Dependabot
+      # n'autorise PAS `dependency-type` dans un bloc `ignore`. Une première
+      # version de ce fichier l'utilisait — Dependabot rejetait alors
+      # l'intégralité de la configuration et ne produisait aucune pull request,
+      # sans que rien ne le signale hors de l'onglet Insights → Dependabot.
+      - dependency-name: '@sentry/react'
         update-types: ['version-update:semver-major']
-
-      # React est le socle de l'application : une montée majeure impose une
-      # campagne de test complète (rendu, hooks, Suspense) et le passage des
-      # E2E Playwright. Jamais en PR automatique.
+      - dependency-name: '@supabase/supabase-js'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'axios'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'framer-motion'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'gsap'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'hls.js'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'jspdf'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'jspdf-autotable'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'lucide-react'
+        update-types: ['version-update:semver-major']
       - dependency-name: 'react'
         update-types: ['version-update:semver-major']
       - dependency-name: 'react-dom'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react-hot-toast'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react-router-dom'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'swiper'
         update-types: ['version-update:semver-major']
 
   # ─────────────────────────────────────────────────────────────
