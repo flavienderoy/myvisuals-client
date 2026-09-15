@@ -18,7 +18,21 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         // Check active sessions and sets the user
         const getSession = async () => {
-            const { data: { session }, error } = await supabase.auth.getSession();
+            const { data: { session } } = await supabase.auth.getSession();
+
+            // getSession() lit le stockage local sans interroger Supabase : la session
+            // peut appartenir à un compte supprimé. On la vérifie avant de charger l'app.
+            // Seul un refus explicite (401/403) déconnecte : une panne réseau ne doit pas.
+            if (session) {
+                const { error } = await supabase.auth.getUser();
+                if (error?.status === 401 || error?.status === 403) {
+                    await supabase.auth.signOut({ scope: 'local' });
+                    setUser(null);
+                    setLoading(false);
+                    return;
+                }
+            }
+
             setUser(session?.user ?? null);
             setLoading(false);
         };

@@ -9,6 +9,19 @@ const api = axios.create({
     baseURL: API_URL
 });
 
+// Session refusée par l'API (compte supprimé, jeton révoqué) : on la ferme
+// localement, une seule fois même si plusieurs requêtes échouent en parallèle.
+// AuthContext repasse alors l'utilisateur à null et ProtectedRoute renvoie vers /login.
+let closingSession = null;
+export const closeRejectedSession = () => {
+    if (!closingSession) {
+        closingSession = supabase.auth.signOut({ scope: 'local' }).finally(() => {
+            closingSession = null;
+        });
+    }
+    return closingSession;
+};
+
 // Request interceptor to automatically add the Supabase JWT token
 api.interceptors.request.use(
     async (config) => {
@@ -38,8 +51,11 @@ api.interceptors.response.use(
             await new Promise((r) => setTimeout(r, delay));
             return api(config);
         }
-        if (error.response?.status === 401) {
-            console.warn('Unauthorized request. Token might be expired.');
+        // Seules les requêtes qui portaient un jeton ferment la session :
+        // un 401 sans jeton (identifiants refusés) ne concerne pas la session.
+        if (error.response?.status === 401 && config?.headers?.Authorization) {
+            console.warn('Session refusée par l’API : déconnexion.');
+            await closeRejectedSession();
         }
         return Promise.reject(error);
     }

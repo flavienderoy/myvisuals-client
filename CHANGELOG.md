@@ -18,6 +18,41 @@ _Rien pour le moment._
 
 ---
 
+## [1.8.1] — 2026-09-15
+
+### Corrigé
+
+- **Application bloquée après la suppression d'un compte.** Le navigateur
+  conservait la session : `getSession()` lit le stockage local sans interroger
+  Supabase, le jeton restait bien formé, et l'application chargeait le tableau
+  de bord. L'API refusait alors chaque requête (401, « User from sub claim in
+  JWT does not exist ») et l'intercepteur se contentait d'un avertissement en
+  console, sans jamais revenir à l'écran de connexion.
+- **Session vérifiée au démarrage** (`AuthContext`) : `getUser()` interroge
+  Supabase et, sur un refus explicite (401/403), la session locale est fermée.
+  Une panne réseau ne déconnecte pas.
+- **Session fermée sur un 401 de l'API** (intercepteur axios), une seule fois
+  même quand une dizaine de requêtes échouent en parallèle ; `ProtectedRoute`
+  renvoie alors vers `/login`. Un 401 sans jeton (identifiants refusés) ne
+  touche pas à la session.
+
+### Sécurité
+
+- **Dépendances mises à jour** après la publication de vulnérabilités de
+  niveau « high » (`browserslist`, `js-yaml`). Mises à jour compatibles, sans
+  changement majeur. L'audit bloquant de la CI aurait refusé ce déploiement.
+
+### Tests
+
+- 6 cas de non-régression (`services/__tests__/api.test.js`,
+  `context/__tests__/AuthContext.test.jsx`). Vérifiés par mutation : l'ancien
+  code restauré, les 2 cas du défaut échouent. Suite portée à **81 tests**.
+
+> À déployer avec l'API **1.6.4** : c'est la remise en service de la connexion
+> multi-comptes côté API qui a rendu ce parcours fréquent en recette.
+
+---
+
 ## [1.8.0] — 2026-08-14
 
 ### Ajouté
